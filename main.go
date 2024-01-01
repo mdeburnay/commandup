@@ -4,10 +4,9 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
-	"strings"
 )
 
 func main() {
@@ -32,7 +31,7 @@ func main() {
 	}
 
 	// Read the response body into a byte slice
-	body, err := ioutil.ReadAll(response.Body)
+	body, err := io.ReadAll(response.Body)
 	if err != nil {
 		fmt.Println("Error reading response body:", err)
 		return
@@ -48,8 +47,13 @@ func main() {
 		return
 	}
 
+	// Access the "Cards to Add" section within the JSON data
+	container := data["container"].(map[string]interface{})
+	cardsToAddSection := container["json_dict"].(map[string]interface{})["cardlists"].([]interface{})[0].(map[string]interface{})
+	upgradeCardList := cardsToAddSection["cardviews"].([]interface{})
+
 	// Compare JSON data with user's card collection and store results
-	results := compareCardCollections(data, userCardCollection)
+	results := compareCardCollections(upgradeCardList, userCardCollection)
 
 	// Store or display the results as needed
 	fmt.Printf("Matching Cards: %+v\n", results)
@@ -67,35 +71,64 @@ func readCSVFile(filePath string) []string {
 	// Create a CSV reader
 	reader := csv.NewReader(file)
 
-	// Read the CSV data into a slice of strings
-	cards, err := reader.Read()
+	// Read the first row (header) from the CSV file
+	header, err := reader.Read()
 	if err != nil {
-		fmt.Println("Error reading CSV data:", err)
+		fmt.Println("Error reading CSV header:", err)
 		return nil
 	}
 
-	// Trim leading and trailing white spaces from card names
-	for i, card := range cards {
-		cards[i] = strings.TrimSpace(card)
+	// Print the first row (header) to see the structure
+	fmt.Println("CSV Header:", header)
+
+	// Read the remaining CSV data into a slice of strings
+	var cards []string
+	for {
+		row, err := reader.Read()
+		if err == io.EOF {
+			break // End of file
+		} else if err != nil {
+			fmt.Println("Error reading CSV data:", err)
+			return nil
+		}
+
+		// Add the row to the slice of cards
+		cards = append(cards, row...)
 	}
 
 	return cards
 }
 
-func compareCardCollections(jsonData map[string]interface{}, userCardCollection []string) []string {
+func compareCardCollections(upgradeCardList []interface{}, userCardCollection []string) []string {
 	var matchingCards []string
 
-	// Iterate through the JSON data and check if each card is in the user's collection
-	for _, card := range jsonData {
-		cardName := card.(string) // Assuming the card name is stored as a string in the JSON data
+	// Iterate through the "cardlist" array
+	for _, item := range upgradeCardList {
+		cardData, ok := item.(map[string]interface{})
+		if !ok {
+			fmt.Println("Error: Unable to parse 'cardlist' item")
+			continue
+		}
 
-		// Trim leading and trailing white spaces from the card name
-		cardName = strings.TrimSpace(cardName)
+		// Navigate the nested structure to access the card name
+		cardName, ok := cardData["name"].(string)
+		if !ok {
+			// If the "name" field is nested within another map, you need to access it accordingly.
+			nameField, nameFieldOk := cardData["name"].(map[string]interface{})
+			if nameFieldOk {
+				cardName, ok = nameField["name"].(string)
+			}
+		}
+
+		if !ok {
+			fmt.Println("Error: Unable to extract 'name' from JSON")
+			continue
+		}
 
 		// Check if the cardName is in the user's collection
 		for _, userCard := range userCardCollection {
 			if cardName == userCard {
-				matchingCards = append(matchingCards, cardName)
+				matchingCards = append(matchingCards, fmt.Sprintf(`"%s"`, cardName))
 				break // Break out of the inner loop once a match is found
 			}
 		}
