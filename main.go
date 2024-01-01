@@ -71,16 +71,6 @@ func readCSVFile(filePath string) []string {
 	// Create a CSV reader
 	reader := csv.NewReader(file)
 
-	// Read the first row (header) from the CSV file
-	header, err := reader.Read()
-	if err != nil {
-		fmt.Println("Error reading CSV header:", err)
-		return nil
-	}
-
-	// Print the first row (header) to see the structure
-	fmt.Println("CSV Header:", header)
-
 	// Read the remaining CSV data into a slice of strings
 	var cards []string
 	for {
