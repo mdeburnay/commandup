@@ -49,11 +49,48 @@ func main() {
 
 	// Access the "Cards to Add" section within the JSON data
 	container := data["container"].(map[string]interface{})
-	cardsToAddSection := container["json_dict"].(map[string]interface{})["cardlists"].([]interface{})[0].(map[string]interface{})
-	upgradeCardList := cardsToAddSection["cardviews"].([]interface{})
+	cardLists := container["json_dict"].(map[string]interface{})["cardlists"].([]interface{})
+
+	var upgradeCards []interface{}
+	// var landsToAdd []interface{}
+	// var cardsToCut []interface{}
+	// var landsToCut []interface{}
+
+	for _, item := range cardLists {
+		cardListData, ok := item.(map[string]interface{})
+		if !ok {
+			fmt.Println("Error: Unable to parse card list item")
+			continue
+		}
+
+		tag, ok := cardListData["tag"].(string)
+		if !ok {
+			fmt.Println("Error: Unable to extract 'tag' from JSON")
+			continue
+		}
+
+		cardViews, ok := cardListData["cardviews"].([]interface{})
+		if !ok {
+			fmt.Println("Error: Unable to extract 'cardviews' from JSON")
+			continue
+		}
+
+		switch tag {
+		case "cardstoadd":
+			upgradeCards = cardViews
+		// case "landstoadd":
+		// 	landsToAdd = cardViews
+		// case "cardstocut":
+		// 	cardsToCut = cardViews
+		// case "landstocut":
+		// landsToCut = cardViews
+		default:
+			fmt.Println("Unknown tag:", tag)
+		}
+	}
 
 	// Compare JSON data with user's card collection and store results
-	results := compareCardCollections(upgradeCardList, userCardCollection)
+	results := compareCardCollections(upgradeCards, userCardCollection)
 
 	// Store or display the results as needed
 	fmt.Printf("Matching Cards: %+v\n", results)
