@@ -13,7 +13,6 @@ func main() {
 	// Read and parse the user's CSV card collection
 	userCardCollection := readCSVFile("user_card_collection.csv")
 
-	// Define the URL for the JSON API (replace with the actual URL)
 	apiURL := "https://json.edhrec.com/pages/precon/chaos-incarnate/kardur-doomscourge.json"
 
 	// Send an HTTP GET request to the API
