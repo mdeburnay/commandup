@@ -2,7 +2,7 @@
 
 # Start the Go backend
 cd backend
-go run main.go &
+$(go env GOPATH)/bin/air &
 cd ..
 
 # Start the React frontend
