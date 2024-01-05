@@ -11,6 +11,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type ResponseData struct {
+	MatchingCards []string `json:"matchingCards"`
+}
+
 // GetCards handles the GET request to fetch cards
 func GetCards(c *gin.Context) {
 
@@ -92,10 +96,22 @@ func GetCards(c *gin.Context) {
 	}
 
 	// Compare JSON data with user's card collection and store results
-	results := compareCardCollections(upgradeCards, userCardCollection)
+	matchingCards := compareCardCollections(upgradeCards, userCardCollection)
 
-	// Store or display the results as needed
-	fmt.Printf("Matching Cards: %+v\n", results)
+	// Create a ResponseData object
+	responseData := ResponseData{
+		MatchingCards: matchingCards,
+	}
+
+	// Serialize the response data to JSON
+	responseDataJSON, err := json.Marshal(responseData)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
+		return
+	}
+
+	// Return the JSON response to the frontend
+	c.Data(http.StatusOK, "application/json; charset=utf-8", responseDataJSON)
 }
 
 func readCSVFile(filePath string) []string {

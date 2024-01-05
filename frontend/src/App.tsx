@@ -15,6 +15,7 @@ import axios from "axios";
 const queryClient = new QueryClient();
 
 function App() {
+  console.log("App");
   return (
     <QueryClientProvider client={queryClient}>
       <CardUpgrades />
@@ -29,36 +30,34 @@ function CardUpgrades(): JSX.Element {
       axios({
         method: "get",
         url: "http://localhost:8080/api/cards/upgrades",
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-        },
       }).then((res) => {
+        console.log(res.data);
         return res.data;
       }),
   });
 
   if (isLoading) return <div>"Loading..."</div>;
 
-  if (error) return <div>"An error has occurred: " + error.message</div>;
+  if (error) {
+    return <div>{error.toString()}</div>;
+  }
+
+  if (data) console.log(data);
 
   return (
     <div className="App">
       <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          {isFetching
-            ? "Fetching your cards..."
-            : data.map((card: string) => {
-                return <p>{card}</p>;
-              })}
-        </p>
         <a
           className="App-link"
           href="https://reactjs.org"
           target="_blank"
           rel="noopener noreferrer"
         >
-          Learn React
+          {isFetching
+            ? "Fetching your cards..."
+            : data.matchingCards.map((card: string, index: number) => {
+                return <div key={index}>{card}</div>;
+              })}
         </a>
       </header>
     </div>
