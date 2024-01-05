@@ -1,16 +1,32 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
+	"log"
 	"main/handlers"
 	"net/http"
+	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+
+	_ "github.com/jackc/pgconn"
+	_ "github.com/jackc/pgx/v5"
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
+var counts int64
+
 func main() {
+
+	conn := connectToDB()
+	if conn == nil {
+		log.Panic("Database not connecting. Exiting.")
+	}
+
 	r := gin.Default()
 
 	config := cors.DefaultConfig()
@@ -29,4 +45,42 @@ func main() {
 	port := ":8080"
 	fmt.Printf("Server is running on port %s\n", port)
 	r.Run(port)
+}
+
+func openDB(dsn string) (*sql.DB, error) {
+	db, err := sql.Open("pgx", dsn)
+	if err != nil {
+		return nil, err
+	}
+
+	err = db.Ping()
+	if err != nil {
+		return nil, err
+	}
+
+	return db, nil
+}
+
+func connectToDB() *sql.DB {
+	dsn := os.Getenv("DATABASE_URL")
+
+	for {
+		connection, err := openDB(dsn)
+		if err != nil {
+			log.Println("Database not connecting. Retrying...")
+			counts++
+		} else {
+			log.Println("Connected to database")
+			return connection
+		}
+
+		if counts > 10 {
+			log.Println("Database not connecting. Exiting...")
+			os.Exit(1)
+		}
+
+		log.Println("Backing off for two seconds...")
+		time.Sleep(2 * time.Second)
+		continue
+	}
 }
