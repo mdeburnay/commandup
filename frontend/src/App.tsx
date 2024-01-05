@@ -1,8 +1,11 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+// Dependencies
+import { useState } from "react";
+import logo from "./logo.svg";
+import "./App.css";
+import axios from "axios";
 
 function App() {
+  const [upgradeCards, setUpgradeCards] = useState([]);
   return (
     <div className="App">
       <header className="App-header">
