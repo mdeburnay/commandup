@@ -16,7 +16,10 @@ func main() {
 	r.StaticFS("/static", http.Dir(filepath.Join(".", "frontend", "build", "static")))
 
 	// Define a route for card-related operations
-	r.GET("/api/cards/upgrades", handlers.GetCards) // Example GET route
+	r.GET("/", func(ctx *gin.Context) {
+		ctx.String(http.StatusOK, "Hello World")
+	})
+	r.GET("/api/cards/upgrades", handlers.GetCards)
 
 	// Run the server
 	port := ":8080"
