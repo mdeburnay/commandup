@@ -48,7 +48,7 @@ func main() {
 }
 
 func openDB(dsn string) (*sql.DB, error) {
-	db, err := sql.Open("pgx", dsn)
+	db, err := sql.Open("postgres", "user=username dbname=commandup sslmode=disable")
 	if err != nil {
 		return nil, err
 	}
@@ -66,6 +66,11 @@ func connectToDB() *sql.DB {
 
 	for {
 		connection, err := openDB(dsn)
+		if counts > 5 {
+			log.Println("Database not connecting. Exiting...")
+			os.Exit(1)
+		}
+
 		if err != nil {
 			log.Println("Database not connecting. Retrying...")
 			counts++
@@ -74,13 +79,8 @@ func connectToDB() *sql.DB {
 			return connection
 		}
 
-		if counts > 10 {
-			log.Println("Database not connecting. Exiting...")
-			os.Exit(1)
-		}
-
-		log.Println("Backing off for two seconds...")
-		time.Sleep(2 * time.Second)
+		log.Println("Backing off for " + fmt.Sprint(counts) + " seconds")
+		time.Sleep(time.Duration(counts) * time.Second)
 		continue
 	}
 }
