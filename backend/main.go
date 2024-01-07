@@ -48,7 +48,7 @@ func main() {
 }
 
 func openDB(dsn string) (*sql.DB, error) {
-	db, err := sql.Open("postgres", "user=username dbname=commandup sslmode=disable")
+	db, err := sql.Open("pgx", dsn)
 	if err != nil {
 		return nil, err
 	}
