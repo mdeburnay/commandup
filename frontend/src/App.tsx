@@ -24,6 +24,15 @@ function App() {
 }
 
 function CardUpgrades(): JSX.Element {
+  const uploadCardCollection = useMutation({
+    mutationFn: (cardCollection: any) => {
+      return axios.post(
+        "http://localhost:8080/api/cards/upload",
+        cardCollection
+      );
+    },
+  });
+
   const { isLoading, error, data, isFetching } = useQuery({
     queryKey: ["cardUpgrades"],
     queryFn: () =>

@@ -20,7 +20,7 @@ func GetCards(c *gin.Context) {
 
 	userCardCollection := readCSVFile("user_card_collection.csv")
 
-	apiURL := "https://json.edhrec.com/pages/precon/chaos-incarnate/kardur-doomscourge.json"
+	apiURL := "https://json.edhrec.com/pages/precon/eldrazi-unbound/zhulodok-void-gorger.json"
 
 	// Send an HTTP GET request to the API
 	response, err := http.Get(apiURL)
