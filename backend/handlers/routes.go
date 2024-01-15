@@ -18,7 +18,7 @@ type ResponseData struct {
 // GetCards handles the GET request to fetch cards
 func GetCards(c *gin.Context) {
 
-	userCardCollection := readCSVFile("user_card_collection.csv")
+	userCardCollection := readCSVFile("card_collection.csv")
 
 	apiURL := "https://json.edhrec.com/pages/precon/eldrazi-unbound/zhulodok-void-gorger.json"
 
