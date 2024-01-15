@@ -44,6 +44,7 @@
     ]
   },
   "devDependencies": {
-    "@tanstack/eslint-plugin-query": "^5.17.1"
+    "@tanstack/eslint-plugin-query": "^5.17.1",
+    "@types/papaparse": "^5.3.14"
   }
 }

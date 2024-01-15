@@ -40,6 +40,8 @@ func main() {
 	r.GET("/", func(ctx *gin.Context) {
 		ctx.String(http.StatusOK, "Hello World")
 	})
+	
+
 	r.GET("/api/cards/upgrades", handlers.GetCards)
 
 	port := ":8080"
