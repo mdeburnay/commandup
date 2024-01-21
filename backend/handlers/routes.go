@@ -11,9 +11,40 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+/********
+* TYPES *
+*********/
+
+type CardView struct {
+	Name string `json:"name"`
+	// Add other fields as required
+}
+
+type CardList struct {
+	CardViews []CardView `json:"cardViews"`
+	Header    string     `json:"header"`
+	Tag       string     `json:"tag"`
+}
+
+type JsonDict struct {
+	CardLists []CardList `json:"cardlists"`
+}
+
+type Container struct {
+	JsonDict JsonDict `json:"json_dict"`
+}
+
+type ApiResponse struct {
+	Container Container `json:"container"`
+}
+
 type ResponseData struct {
 	MatchingCards []string `json:"matchingCards"`
 }
+
+/************
+* FUNCTIONS *
+*************/
 
 // GetCards handles the GET request to fetch cards
 func GetCards(c *gin.Context) {
@@ -22,45 +53,16 @@ func GetCards(c *gin.Context) {
 
 	apiURL := "https://json.edhrec.com/pages/precon/eldrazi-unbound/zhulodok-void-gorger.json"
 
-	// Send an HTTP GET request to the API
-	response, err := http.Get(apiURL)
+	cardList, err := fetchApiResponse(apiURL)
+
 	if err != nil {
-		fmt.Println("Error sending GET request:", err)
-		return
-	}
-	defer response.Body.Close()
-
-	// Check if the response status code is not 200 (OK)
-	if response.StatusCode != http.StatusOK {
-		fmt.Println("Received non-OK response:", response.Status)
-		return
-	}
-
-	// Read the response body into a byte slice
-	body, err := io.ReadAll(response.Body)
-	if err != nil {
-		fmt.Println("Error reading response body:", err)
-		return
-	}
-
-	// Define a struct that matches the structure of the JSON data
-	var data map[string]interface{} // You can define a struct that matches your JSON data here
-
-	// Unmarshal the JSON data into the struct
-	err = json.Unmarshal(body, &data)
-	if err != nil {
-		fmt.Println("Error unmarshaling JSON data:", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
 		return
 	}
 
 	// Access the "Cards to Add" section within the JSON data
-	container := data["container"].(map[string]interface{})
+	container := cardList["container"].(map[string]interface{})
 	cardLists := container["json_dict"].(map[string]interface{})["cardlists"].([]interface{})
-
-	var upgradeCards []interface{}
-	// var landsToAdd []interface{}
-	// var cardsToCut []interface{}
-	// var landsToCut []interface{}
 
 	for _, item := range cardLists {
 		cardListData, ok := item.(map[string]interface{})
@@ -81,37 +83,58 @@ func GetCards(c *gin.Context) {
 			continue
 		}
 
-		switch tag {
-		case "cardstoadd":
-			upgradeCards = cardViews
-		// case "landstoadd":
-		// 	landsToAdd = cardViews
-		// case "cardstocut":
-		// 	cardsToCut = cardViews
-		// case "landstocut":
-		// landsToCut = cardViews
-		default:
-			fmt.Println("Unknown tag:", tag)
+		// Compare JSON data with user's card collection and store results
+		matchingCards := compareCardCollections(cardViews, userCardCollection)
+
+		// Create a return object like so:
+		// 1. Cards owned
+		// 2. Lands owned
+		// 3. Cards to add
+		// 4. Lands to add
+		// 5. Cards to cut
+		// 6. Lands to cut
+
+		// Create a ResponseData object
+		responseData := ResponseData{
+			MatchingCards: matchingCards,
 		}
+
+		// Serialize the response data to JSON
+		responseDataJSON, err := json.Marshal(responseData)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
+			return
+		}
+
+		// Return the JSON response to the frontend
+		c.Data(http.StatusOK, "application/json; charset=utf-8", responseDataJSON)
 	}
+}
 
-	// Compare JSON data with user's card collection and store results
-	matchingCards := compareCardCollections(upgradeCards, userCardCollection)
+func fetchApiResponse(apiURL string) (ApiResponse, error) {
+	var apiResponse ApiResponse
 
-	// Create a ResponseData object
-	responseData := ResponseData{
-		MatchingCards: matchingCards,
-	}
-
-	// Serialize the response data to JSON
-	responseDataJSON, err := json.Marshal(responseData)
+	response, err := http.Get(apiURL)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
-		return
+		return apiResponse, err
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
+		return apiResponse, fmt.Errorf("Received non-OK response: %s", response.Status)
 	}
 
-	// Return the JSON response to the frontend
-	c.Data(http.StatusOK, "application/json; charset=utf-8", responseDataJSON)
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		return apiResponse, err
+	}
+
+	err = json.Unmarshal(body, &apiResponse)
+	if err != nil {
+		return apiResponse, err
+	}
+
+	return apiResponse, nil
 }
 
 func readCSVFile(filePath string) []string {
