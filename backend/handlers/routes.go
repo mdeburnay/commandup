@@ -53,31 +53,21 @@ type CardListResponse struct {
 
 func GetCards(c *gin.Context) {
 
-	log.Default().Println("Getting cards")
-
 	userCardCollection := readCSVFile("card_collection.csv")
 
 	apiURL := "https://json.edhrec.com/pages/precon/eldrazi-unbound/zhulodok-void-gorger.json"
 
-	log.Default().Println("Fetching API response")
-
 	cardList, err := fetchApiResponse(apiURL)
-
-	log.Default().Println("Got API response")
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
 		return
 	}
 
-	log.Default().Println("Got card list")
-
 	container := cardList.Container
 	returnedCardLists := CardListResponse{}
 
 	for _, cardListData := range container.JsonDict.CardLists {
-
-		log.Default().Println("Processing card list")
 
 		tag := cardListData.Tag
 
@@ -85,21 +75,19 @@ func GetCards(c *gin.Context) {
 
 		matchingCards := compareCardCollections(cardViews, userCardCollection)
 
-		log.Default().Println("Got matching cards")
-
 		switch tag {
 		case "cardstoadd":
 			returnedCardLists.CardsToAdd = append(returnedCardLists.CardsToAdd, matchingCards...)
-			log.Default().Println("Got cards to add")
+
 		case "landstoadd":
 			returnedCardLists.LandsToAdd = append(returnedCardLists.LandsToAdd, matchingCards...)
-			log.Default().Println("Got lands to add")
+
 		case "cardstocut":
 			returnedCardLists.CardsToCut = append(returnedCardLists.CardsToCut, matchingCards...)
-			log.Default().Println("Got cards to cut")
+
 		case "landstocut":
 			returnedCardLists.LandsToCut = append(returnedCardLists.LandsToCut, matchingCards...)
-			log.Default().Println("Got lands to cut")
+
 		}
 
 		// Serialize the response data to JSON
@@ -132,13 +120,12 @@ func fetchApiResponse(apiURL string) (ApiResponse, error) {
 
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
-		log.Default().Println("Error reading API response")
+
 		return apiResponse, err
 	}
 
 	err = json.Unmarshal(body, &apiResponse)
 	if err != nil {
-		log.Default().Println("Error unmarshalling API response")
 		return apiResponse, err
 	}
 
