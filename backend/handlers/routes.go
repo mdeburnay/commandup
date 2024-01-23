@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 
@@ -17,7 +18,6 @@ import (
 
 type CardView struct {
 	Name string `json:"name"`
-	// Add other fields as required
 }
 
 type CardList struct {
@@ -35,76 +35,81 @@ type Container struct {
 }
 
 type ApiResponse struct {
-	Container Container `json:"container"`
+	Header      string    `json:"header"`
+	Description string    `json:"description"`
+	Container   Container `json:"container"`
 }
 
-type ResponseData struct {
-	MatchingCards []string `json:"matchingCards"`
+type CardListResponse struct {
+	CardsToAdd []string `json:"cardstoadd"`
+	LandsToAdd []string `json:"landstoadd"`
+	CardsToCut []string `json:"cardstocut"`
+	LandsToCut []string `json:"landstocut"`
 }
 
 /************
 * FUNCTIONS *
 *************/
 
-// GetCards handles the GET request to fetch cards
 func GetCards(c *gin.Context) {
+
+	log.Default().Println("Getting cards")
 
 	userCardCollection := readCSVFile("card_collection.csv")
 
 	apiURL := "https://json.edhrec.com/pages/precon/eldrazi-unbound/zhulodok-void-gorger.json"
 
+	log.Default().Println("Fetching API response")
+
 	cardList, err := fetchApiResponse(apiURL)
+
+	log.Default().Println("Got API response")
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
 		return
 	}
 
-	// Access the "Cards to Add" section within the JSON data
-	container := cardList["container"].(map[string]interface{})
-	cardLists := container["json_dict"].(map[string]interface{})["cardlists"].([]interface{})
+	log.Default().Println("Got card list")
 
-	for _, item := range cardLists {
-		cardListData, ok := item.(map[string]interface{})
-		if !ok {
-			fmt.Println("Error: Unable to parse card list item")
-			continue
-		}
+	container := cardList.Container
+	returnedCardLists := CardListResponse{}
 
-		tag, ok := cardListData["tag"].(string)
-		if !ok {
-			fmt.Println("Error: Unable to extract 'tag' from JSON")
-			continue
-		}
+	for _, cardListData := range container.JsonDict.CardLists {
 
-		cardViews, ok := cardListData["cardviews"].([]interface{})
-		if !ok {
-			fmt.Println("Error: Unable to extract 'cardviews' from JSON")
-			continue
-		}
+		log.Default().Println("Processing card list")
 
-		// Compare JSON data with user's card collection and store results
+		tag := cardListData.Tag
+
+		cardViews := cardListData.CardViews
+
 		matchingCards := compareCardCollections(cardViews, userCardCollection)
 
-		// Create a return object like so:
-		// 1. Cards owned
-		// 2. Lands owned
-		// 3. Cards to add
-		// 4. Lands to add
-		// 5. Cards to cut
-		// 6. Lands to cut
+		log.Default().Println("Got matching cards")
 
-		// Create a ResponseData object
-		responseData := ResponseData{
-			MatchingCards: matchingCards,
+		switch tag {
+		case "cardstoadd":
+			returnedCardLists.CardsToAdd = append(returnedCardLists.CardsToAdd, matchingCards...)
+			log.Default().Println("Got cards to add")
+		case "landstoadd":
+			returnedCardLists.LandsToAdd = append(returnedCardLists.LandsToAdd, matchingCards...)
+			log.Default().Println("Got lands to add")
+		case "cardstocut":
+			returnedCardLists.CardsToCut = append(returnedCardLists.CardsToCut, matchingCards...)
+			log.Default().Println("Got cards to cut")
+		case "landstocut":
+			returnedCardLists.LandsToCut = append(returnedCardLists.LandsToCut, matchingCards...)
+			log.Default().Println("Got lands to cut")
 		}
 
 		// Serialize the response data to JSON
-		responseDataJSON, err := json.Marshal(responseData)
+		responseDataJSON, err := json.Marshal(returnedCardLists)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
 			return
 		}
+
+		log.Default().Println("Got response data")
 
 		// Return the JSON response to the frontend
 		c.Data(http.StatusOK, "application/json; charset=utf-8", responseDataJSON)
@@ -116,6 +121,7 @@ func fetchApiResponse(apiURL string) (ApiResponse, error) {
 
 	response, err := http.Get(apiURL)
 	if err != nil {
+		log.Default().Println("Error fetching API response")
 		return apiResponse, err
 	}
 	defer response.Body.Close()
@@ -126,11 +132,13 @@ func fetchApiResponse(apiURL string) (ApiResponse, error) {
 
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
+		log.Default().Println("Error reading API response")
 		return apiResponse, err
 	}
 
 	err = json.Unmarshal(body, &apiResponse)
 	if err != nil {
+		log.Default().Println("Error unmarshalling API response")
 		return apiResponse, err
 	}
 
@@ -167,37 +175,16 @@ func readCSVFile(filePath string) []string {
 	return cards
 }
 
-func compareCardCollections(upgradeCardList []interface{}, userCardCollection []string) []string {
+func compareCardCollections(upgradeCardList []CardView, userCardCollection []string) []string {
 	var matchingCards []string
 
-	// Iterate through the "cardlist" array
-	for _, item := range upgradeCardList {
-		cardData, ok := item.(map[string]interface{})
-		if !ok {
-			fmt.Println("Error: Unable to parse 'cardlist' item")
-			continue
-		}
+	for _, cardData := range upgradeCardList {
+		cardName := cardData.Name
 
-		// Navigate the nested structure to access the card name
-		cardName, ok := cardData["name"].(string)
-		if !ok {
-			// If the "name" field is nested within another map, you need to access it accordingly.
-			nameField, nameFieldOk := cardData["name"].(map[string]interface{})
-			if nameFieldOk {
-				cardName, ok = nameField["name"].(string)
-			}
-		}
-
-		if !ok {
-			fmt.Println("Error: Unable to extract 'name' from JSON")
-			continue
-		}
-
-		// Check if the cardName is in the user's collection
 		for _, userCard := range userCardCollection {
-			if cardName == userCard {
-				matchingCards = append(matchingCards, fmt.Sprintf(`"%s"`, cardName))
-				break // Break out of the inner loop once a match is found
+			if userCard == cardName {
+				matchingCards = append(matchingCards, cardName)
+				break
 			}
 		}
 	}
