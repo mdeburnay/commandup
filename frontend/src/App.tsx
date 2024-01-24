@@ -14,7 +14,6 @@ import Papa from "papaparse";
 const queryClient = new QueryClient();
 
 function App() {
-  console.log("App");
   return (
     <QueryClientProvider client={queryClient}>
       <CardUpgrades>
@@ -76,9 +75,8 @@ function CardUpgrades({
       axios({
         method: "get",
         url: "http://localhost:8080/api/cards/upgrades",
-      }).then((res) => {
-        console.log(res.data);
-        return res.data;
+      }).then(({ data }) => {
+        return data;
       }),
   });
 
@@ -88,25 +86,46 @@ function CardUpgrades({
     return <div>{error.toString()}</div>;
   }
 
-  if (data) console.log(data);
-
   return (
     <div className="App">
-      <header className="App-header">
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          {isFetching
-            ? "Fetching your cards..."
-            : data.matchingCards.map((card: string, index: number) => {
-                return <div key={index}>{card}</div>;
-              })}
-        </a>
-        {Array.isArray(children) ? children.map((child) => child) : children}
-      </header>
+      {isFetching ? (
+        "Fetching your cards..."
+      ) : (
+        <>
+          <h2>Cards You Have</h2>
+          {data.cardsYouHave.map((card: string, index: number) => {
+            return (
+              <div style={{ color: "red", fontSize: 16 }} key={index}>
+                {card}
+              </div>
+            );
+          })}
+          <h2>Cards You Need</h2>
+          {data.cardsYouNeed.map((card: string, index: number) => {
+            return (
+              <div style={{ color: "green", fontSize: 16 }} key={index}>
+                {card}
+              </div>
+            );
+          })}
+          <h2>Cards To Cut</h2>
+          {data.cardsToCut.map((card: string, index: number) => {
+            return (
+              <div style={{ color: "blue", fontSize: 16 }} key={index}>
+                {card}
+              </div>
+            );
+          })}
+          <h2>Lands To Cut</h2>
+          {data.landsToCut.map((card: string, index: number) => {
+            return (
+              <div style={{ color: "blue", fontSize: 16 }} key={index}>
+                {card}
+              </div>
+            );
+          })}
+        </>
+      )}
     </div>
   );
 }
