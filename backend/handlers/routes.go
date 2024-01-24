@@ -41,10 +41,10 @@ type ApiResponse struct {
 }
 
 type CardListResponse struct {
-	CardsToAdd []string `json:"cardstoadd"`
-	LandsToAdd []string `json:"landstoadd"`
-	CardsToCut []string `json:"cardstocut"`
-	LandsToCut []string `json:"landstocut"`
+	CardsYouHave []string `json:"cardsYouHave"`
+	CardsYouNeed []string `json:"cardsYouNeed"`
+	CardsToCut   []string `json:"cardsToCut"`
+	LandsToCut   []string `json:"landsToCut"`
 }
 
 /************
@@ -73,35 +73,27 @@ func GetCards(c *gin.Context) {
 
 		cardViews := cardListData.CardViews
 
-		matchingCards := compareCardCollections(cardViews, userCardCollection)
-
-		switch tag {
-		case "cardstoadd":
-			returnedCardLists.CardsToAdd = append(returnedCardLists.CardsToAdd, matchingCards...)
-
-		case "landstoadd":
-			returnedCardLists.LandsToAdd = append(returnedCardLists.LandsToAdd, matchingCards...)
-
-		case "cardstocut":
-			returnedCardLists.CardsToCut = append(returnedCardLists.CardsToCut, matchingCards...)
-
-		case "landstocut":
-			returnedCardLists.LandsToCut = append(returnedCardLists.LandsToCut, matchingCards...)
-
+		if tag == "cardstoadd" || tag == "landstoadd" {
+			matchingCards, nonMatchingCards := compareCardCollections(cardViews, userCardCollection)
+			returnedCardLists.CardsYouHave = append(returnedCardLists.CardsYouHave, matchingCards...)
+			returnedCardLists.CardsYouNeed = append(returnedCardLists.CardsYouNeed, nonMatchingCards...)
+		} else if tag == "cardstocut" {
+			returnedCardLists.CardsToCut = append(returnedCardLists.CardsToCut, extractCardNames(cardViews)...)
+		} else if tag == "landstocut" {
+			returnedCardLists.LandsToCut = append(returnedCardLists.LandsToCut, extractCardNames(cardViews)...)
 		}
 
-		// Serialize the response data to JSON
-		responseDataJSON, err := json.Marshal(returnedCardLists)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
-			return
-		}
-
-		log.Default().Println("Got response data")
-
-		// Return the JSON response to the frontend
-		c.Data(http.StatusOK, "application/json; charset=utf-8", responseDataJSON)
 	}
+
+	// Serialize the response data to JSON
+	responseDataJSON, err := json.Marshal(returnedCardLists)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
+		return
+	}
+
+	// Return the JSON response to the frontend
+	c.Data(http.StatusOK, "application/json; charset=utf-8", responseDataJSON)
 }
 
 func fetchApiResponse(apiURL string) (ApiResponse, error) {
@@ -162,19 +154,28 @@ func readCSVFile(filePath string) []string {
 	return cards
 }
 
-func compareCardCollections(upgradeCardList []CardView, userCardCollection []string) []string {
-	var matchingCards []string
+func compareCardCollections(cardViews []CardView, userCardCollection []string) (matchingCards []string, nonMatchingCards []string) {
+	cardMap := make(map[string]bool)
 
-	for _, cardData := range upgradeCardList {
-		cardName := cardData.Name
+	for _, card := range userCardCollection {
+		cardMap[card] = true
+	}
 
-		for _, userCard := range userCardCollection {
-			if userCard == cardName {
-				matchingCards = append(matchingCards, cardName)
-				break
-			}
+	for _, cardView := range cardViews {
+		if _, exists := cardMap[cardView.Name]; exists {
+			matchingCards = append(matchingCards, cardView.Name)
+		} else {
+			nonMatchingCards = append(nonMatchingCards, cardView.Name)
 		}
 	}
 
-	return matchingCards
+	return
+}
+
+func extractCardNames(cardViews []CardView) []string {
+	var cardNames []string
+	for _, card := range cardViews {
+		cardNames = append(cardNames, card.Name)
+	}
+	return cardNames
 }
