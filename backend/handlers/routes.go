@@ -175,6 +175,25 @@ func UploadCardCollection(db *sql.DB) gin.HandlerFunc {
 		log.Default().Println("Inserting records")
 
 		for _, record := range records[1:] {
+			var exists bool
+			foilBool := record[6] == "foil"
+
+			err := db.QueryRow(`
+        SELECT EXISTS(
+            SELECT 1 FROM cards 
+            WHERE name = $1 AND edition = $2 AND foil = $3
+        )`, record[2], record[3], foilBool).Scan(&exists) // Use foilBool, which is now correctly a boolean
+
+			if err != nil {
+				log.Printf("Error checking if record exists: %v", err)
+				continue // Skip this record due to error
+			}
+
+			if exists {
+				log.Printf("Record already exists: %v", record)
+				continue
+			}
+
 			var card Card
 			card.Count, _ = strconv.Atoi(record[0])
 			card.TradelistCount, _ = strconv.Atoi(record[1])
@@ -182,9 +201,8 @@ func UploadCardCollection(db *sql.DB) gin.HandlerFunc {
 			card.Edition = record[3]
 			card.Condition = record[4]
 			card.Language = record[5]
-			card.Foil = record[6] == "Yes" // Assuming "Yes" indicates true
+			card.Foil = record[6] == "foil"
 			card.Tags = record[7]
-			// Skip "Last Modified" for simplicity, or parse it into time.Time
 			card.CollectorNumber = record[9]
 			card.Alter = record[10] == "Yes"
 			card.Proxy = record[11] == "Yes"

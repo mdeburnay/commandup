@@ -51,7 +51,7 @@ func main() {
 
 	r.POST("/api/cards/upload-card-collection", handlers.UploadCardCollection(conn))
 
-	port := ":8080"
+	port := "localhost:8080"
 	fmt.Printf("Server is running on port %s\n", port)
 	r.Run(port)
 }
