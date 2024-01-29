@@ -40,59 +40,79 @@ type ApiResponse struct {
 	Container   Container `json:"container"`
 }
 
-type CardListResponse struct {
-	CardsYouHave []string `json:"cardsYouHave"`
-	CardsYouNeed []string `json:"cardsYouNeed"`
-	CardsToCut   []string `json:"cardsToCut"`
-	LandsToCut   []string `json:"landsToCut"`
+type Titles struct {
+	CardsYouHave string `json:"cardsYouHave"`
+	CardsYouNeed string `json:"cardsYouNeed"`
+	CardsToCut   string `json:"cardsToCut"`
 }
+
+type CardCategory struct {
+	Title string   `json:"title"`
+	Cards []string `json:"cards"`
+}
+
+type CardListResponse []CardCategory
 
 /************
 * FUNCTIONS *
 *************/
 
 func GetCards(c *gin.Context) {
-
 	userCardCollection := readCSVFile("card_collection.csv")
 
-	apiURL := "https://json.edhrec.com/pages/precon/eldrazi-unbound/zhulodok-void-gorger.json"
+	apiURL := "https://json.edhrec.com/pages/precon/chaos-incarnate/kardur-doomscourge.json"
 
 	cardList, err := fetchApiResponse(apiURL)
-
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
 		return
 	}
 
-	container := cardList.Container
-	returnedCardLists := CardListResponse{}
+	var response CardListResponse
+	var cardsToCut []string   // Accumulate all cards to cut here
+	var cardsYouHave []string // Accumulate all cards you have here
+	var cardsYouNeed []string // Accumulate all cards you need here
 
-	for _, cardListData := range container.JsonDict.CardLists {
-
+	for _, cardListData := range cardList.Container.JsonDict.CardLists {
 		tag := cardListData.Tag
-
 		cardViews := cardListData.CardViews
 
-		if tag == "cardstoadd" || tag == "landstoadd" {
+		switch tag {
+		case "cardstoadd", "landstoadd":
 			matchingCards, nonMatchingCards := compareCardCollections(cardViews, userCardCollection)
-			returnedCardLists.CardsYouHave = append(returnedCardLists.CardsYouHave, matchingCards...)
-			returnedCardLists.CardsYouNeed = append(returnedCardLists.CardsYouNeed, nonMatchingCards...)
-		} else if tag == "cardstocut" {
-			returnedCardLists.CardsToCut = append(returnedCardLists.CardsToCut, extractCardNames(cardViews)...)
-		} else if tag == "landstocut" {
-			returnedCardLists.LandsToCut = append(returnedCardLists.LandsToCut, extractCardNames(cardViews)...)
+			cardsYouHave = append(cardsYouHave, matchingCards...)
+			cardsYouNeed = append(cardsYouNeed, nonMatchingCards...)
+		case "cardstocut", "landstocut":
+			cardsToCut = append(cardsToCut, extractCardNames(cardViews)...)
 		}
-
 	}
 
-	// Serialize the response data to JSON
-	responseDataJSON, err := json.Marshal(returnedCardLists)
+	// After processing all card lists, create the categories
+	if len(cardsYouHave) > 0 {
+		response = append(response, CardCategory{
+			Title: "Cards You Have",
+			Cards: uniqueStrings(cardsYouHave), // Ensure uniqueness
+		})
+	}
+	if len(cardsYouNeed) > 0 {
+		response = append(response, CardCategory{
+			Title: "Cards You Need",
+			Cards: uniqueStrings(cardsYouNeed), // Ensure uniqueness
+		})
+	}
+	if len(cardsToCut) > 0 {
+		response = append(response, CardCategory{
+			Title: "Cards To Cut",
+			Cards: uniqueStrings(cardsToCut), // Ensure uniqueness
+		})
+	}
+
+	responseDataJSON, err := json.Marshal(response)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
 		return
 	}
 
-	// Return the JSON response to the frontend
 	c.Data(http.StatusOK, "application/json; charset=utf-8", responseDataJSON)
 }
 
@@ -178,4 +198,18 @@ func extractCardNames(cardViews []CardView) []string {
 		cardNames = append(cardNames, card.Name)
 	}
 	return cardNames
+}
+
+func uniqueStrings(input []string) []string {
+	seen := make(map[string]bool)
+	var result []string
+
+	for _, value := range input {
+		if _, ok := seen[value]; !ok {
+			seen[value] = true
+			result = append(result, value)
+		}
+	}
+
+	return result
 }

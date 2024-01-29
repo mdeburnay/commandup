@@ -76,6 +76,7 @@ function CardUpgrades({
         method: "get",
         url: "http://localhost:8080/api/cards/upgrades",
       }).then(({ data }) => {
+        console.log(data);
         return data;
       }),
   });
@@ -92,36 +93,16 @@ function CardUpgrades({
         "Fetching your cards..."
       ) : (
         <>
-          <h2>Cards You Have</h2>
-          {data.cardsYouHave.map((card: string, index: number) => {
+          {data.map(({ title, cards }: { title: string; cards: string[] }) => {
             return (
-              <div style={{ color: "red", fontSize: 16 }} key={index}>
-                {card}
-              </div>
-            );
-          })}
-          <h2>Cards You Need</h2>
-          {data.cardsYouNeed.map((card: string, index: number) => {
-            return (
-              <div style={{ color: "green", fontSize: 16 }} key={index}>
-                {card}
-              </div>
-            );
-          })}
-          <h2>Cards To Cut</h2>
-          {data.cardsToCut.map((card: string, index: number) => {
-            return (
-              <div style={{ color: "blue", fontSize: 16 }} key={index}>
-                {card}
-              </div>
-            );
-          })}
-          <h2>Lands To Cut</h2>
-          {data.landsToCut.map((card: string, index: number) => {
-            return (
-              <div style={{ color: "blue", fontSize: 16 }} key={index}>
-                {card}
-              </div>
+              <>
+                <h2 style={{ fontSize: 16 }}>{title}</h2>
+                <div>
+                  {cards.map((card) => {
+                    return <div style={{ fontSize: 14 }}>{card}</div>;
+                  })}
+                </div>
+              </>
             );
           })}
         </>
