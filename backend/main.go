@@ -12,6 +12,7 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 
 	_ "github.com/jackc/pgconn"
 	_ "github.com/jackc/pgx/v5"
@@ -21,6 +22,11 @@ import (
 var counts int64
 
 func main() {
+
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
 
 	conn := connectToDB()
 	if conn == nil {
@@ -40,9 +46,10 @@ func main() {
 	r.GET("/", func(ctx *gin.Context) {
 		ctx.String(http.StatusOK, "Hello World")
 	})
-	
 
 	r.GET("/api/cards/upgrades", handlers.GetCards)
+
+	r.POST("/api/cards/upload-card-collection", handlers.UploadCardCollection(conn))
 
 	port := ":8080"
 	fmt.Printf("Server is running on port %s\n", port)
@@ -65,6 +72,10 @@ func openDB(dsn string) (*sql.DB, error) {
 
 func connectToDB() *sql.DB {
 	dsn := os.Getenv("DSN")
+
+	if dsn == "" {
+		log.Panic("DSN not set. Exiting.")
+	}
 
 	for {
 		connection, err := openDB(dsn)

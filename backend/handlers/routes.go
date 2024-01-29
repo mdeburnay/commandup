@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"database/sql"
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
@@ -8,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -49,6 +51,22 @@ type Titles struct {
 type CardCategory struct {
 	Title string   `json:"title"`
 	Cards []string `json:"cards"`
+}
+
+type Card struct {
+	Count           int
+	TradelistCount  int
+	Name            string
+	Edition         string
+	Condition       string
+	Language        string
+	Foil            bool
+	Tags            string
+	LastModified    string
+	CollectorNumber string
+	Alter           bool
+	Proxy           bool
+	PurchasePrice   float64
 }
 
 type CardListResponse []CardCategory
@@ -114,6 +132,81 @@ func GetCards(c *gin.Context) {
 	}
 
 	c.Data(http.StatusOK, "application/json; charset=utf-8", responseDataJSON)
+}
+
+func UploadCardCollection(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		log.Default().Println("Uploading card collection")
+		file, err := c.FormFile("file")
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Bad Request"})
+			return
+		}
+
+		log.Default().Println("Saving file")
+
+		tempFilePath := "temp_card_collection.csv"
+		err = c.SaveUploadedFile(file, tempFilePath)
+
+		log.Default().Println("File saved")
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
+			return
+		}
+
+		log.Default().Println("Opening file")
+
+		f, err := os.Open(tempFilePath)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to open the file"})
+			return
+		}
+		defer f.Close()
+
+		log.Default().Println("Reading file")
+
+		csvReader := csv.NewReader(f)
+		records, err := csvReader.ReadAll()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to read the CSV file"})
+			return
+		}
+
+		log.Default().Println("Inserting records")
+
+		for _, record := range records[1:] {
+			var card Card
+			card.Count, _ = strconv.Atoi(record[0])
+			card.TradelistCount, _ = strconv.Atoi(record[1])
+			card.Name = record[2]
+			card.Edition = record[3]
+			card.Condition = record[4]
+			card.Language = record[5]
+			card.Foil = record[6] == "Yes" // Assuming "Yes" indicates true
+			card.Tags = record[7]
+			// Skip "Last Modified" for simplicity, or parse it into time.Time
+			card.CollectorNumber = record[9]
+			card.Alter = record[10] == "Yes"
+			card.Proxy = record[11] == "Yes"
+			card.PurchasePrice, _ = strconv.ParseFloat(record[12], 64)
+
+			_, err = db.Exec("INSERT INTO cards (name, edition, condition, language, foil, tags, collector_number, alter, proxy, purchase_price) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)", card.Name, card.Edition, card.Condition, card.Language, card.Foil, card.Tags, card.CollectorNumber, card.Alter, card.Proxy, card.PurchasePrice)
+			if err != nil {
+				if err != nil {
+					log.Printf("Error inserting record: %v", err)
+					continue
+				}
+			}
+		}
+
+		log.Default().Println("Removing temp file")
+
+		os.Remove(tempFilePath)
+
+		log.Default().Println("File removed")
+
+		c.JSON(http.StatusOK, gin.H{"message": "File uploaded and processed successfully"})
+	}
 }
 
 func fetchApiResponse(apiURL string) (ApiResponse, error) {

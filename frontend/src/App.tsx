@@ -1,5 +1,5 @@
 // Dependencies
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./App.css";
 import {
   useQuery,
@@ -16,9 +16,8 @@ const queryClient = new QueryClient();
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <CardUpgrades>
-        <CardUploadButton />
-      </CardUpgrades>
+      <CardUpgrades />
+      <CardUploadButton />
     </QueryClientProvider>
   );
 }
@@ -38,12 +37,17 @@ function CardUploadButton(): JSX.Element {
       formData.append("file", selectedFile);
 
       axios
-        .post("http://localhost:8080/api/cards/upload", formData, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        })
+        .post(
+          "http://localhost:8080/api/cards/upload-card-collection",
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        )
         .then((response) => {
+          console.log(response);
           // Handle the response from your backend here
           console.log("File uploaded successfully:", response.data);
         })
@@ -64,24 +68,16 @@ function CardUploadButton(): JSX.Element {
   );
 }
 
-function CardUpgrades({
-  children,
-}: {
-  children: React.ReactNode;
-}): JSX.Element {
-  const { isLoading, error, data, isFetching } = useQuery({
-    queryKey: ["cardUpgrades"],
-    queryFn: () =>
+function CardUpgrades(): JSX.Element {
+  const { error, data } = useMutation({
+    mutationFn: () =>
       axios({
-        method: "get",
+        method: "POST",
         url: "http://localhost:8080/api/cards/upgrades",
       }).then(({ data }) => {
-        console.log(data);
         return data;
       }),
   });
-
-  if (isLoading) return <div>Loading...</div>;
 
   if (error) {
     return <div>{error.toString()}</div>;
@@ -89,24 +85,30 @@ function CardUpgrades({
 
   return (
     <div className="App">
-      {isFetching ? (
-        "Fetching your cards..."
-      ) : (
-        <>
-          {data.map(({ title, cards }: { title: string; cards: string[] }) => {
-            return (
-              <>
-                <h2 style={{ fontSize: 16 }}>{title}</h2>
-                <div>
-                  {cards.map((card) => {
-                    return <div style={{ fontSize: 14 }}>{card}</div>;
-                  })}
+      <>
+        {data &&
+          data.map(
+            (
+              { title, cards }: { title: string; cards: string[] },
+              i: number
+            ) => {
+              return (
+                <div key={i}>
+                  <h2 style={{ fontSize: 16 }}>{title}</h2>
+                  <div>
+                    {cards.map((card: string, i: number) => {
+                      return (
+                        <div key={i} style={{ fontSize: 14 }}>
+                          {card}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-              </>
-            );
-          })}
-        </>
-      )}
+              );
+            }
+          )}
+      </>
     </div>
   );
 }
