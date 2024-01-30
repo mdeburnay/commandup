@@ -1,14 +1,16 @@
 // Dependencies
-import { useState, useEffect } from "react";
 import {
-  useQuery,
   useMutation,
   QueryClient,
   QueryClientProvider,
 } from "@tanstack/react-query";
 import axios from "axios";
-import Papa from "papaparse";
+
+// Styles
 import "./index.css";
+
+// Components
+import { FileUpload } from "./components/FileUpload";
 
 // Create a client
 const queryClient = new QueryClient();
@@ -17,54 +19,8 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <CardUpgrades />
-      <CardUploadButton />
+      <FileUpload />
     </QueryClientProvider>
-  );
-}
-
-function CardUploadButton(): JSX.Element {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files) {
-      setSelectedFile(event.target.files[0]);
-    }
-  };
-
-  const handleFileUpload = () => {
-    if (selectedFile) {
-      const formData = new FormData();
-      formData.append("file", selectedFile);
-
-      axios
-        .post(
-          "http://localhost:8080/api/cards/upload-card-collection",
-          formData,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
-          }
-        )
-        .then((response) => {
-          console.log(response);
-          // Handle the response from your backend here
-          console.log("File uploaded successfully:", response.data);
-        })
-        .catch((error) => {
-          // Handle any errors that occur during the upload
-          console.error("Error uploading file:", error);
-        });
-    }
-  };
-
-  return (
-    <>
-      <input type="file" onChange={handleFileChange} />
-      <button style={{ height: 50, width: 200 }} onClick={handleFileUpload}>
-        Upload File
-      </button>
-    </>
   );
 }
 
