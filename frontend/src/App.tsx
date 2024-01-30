@@ -1,6 +1,5 @@
 // Dependencies
 import { useState, useEffect } from "react";
-import "./App.css";
 import {
   useQuery,
   useMutation,
@@ -9,6 +8,7 @@ import {
 } from "@tanstack/react-query";
 import axios from "axios";
 import Papa from "papaparse";
+import "./index.css";
 
 // Create a client
 const queryClient = new QueryClient();
