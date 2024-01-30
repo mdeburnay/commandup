@@ -30,31 +30,26 @@ function CardUpgrades(): JSX.Element {
   }
 
   return (
-    <div className="App">
-      <>
-        {data &&
-          data.map(
-            (
-              { title, cards }: { title: string; cards: string[] },
-              i: number
-            ) => {
-              return (
-                <div key={i}>
-                  <h2 style={{ fontSize: 16 }}>{title}</h2>
-                  <div>
-                    {cards.map((card: string, i: number) => {
-                      return (
-                        <div key={i} style={{ fontSize: 14 }}>
-                          {card}
-                        </div>
-                      );
-                    })}
-                  </div>
+    <>
+      {data &&
+        data.map(
+          ({ title, cards }: { title: string; cards: string[] }, i: number) => {
+            return (
+              <div key={i}>
+                <h2 style={{ fontSize: 16 }}>{title}</h2>
+                <div>
+                  {cards.map((card: string, i: number) => {
+                    return (
+                      <div key={i} style={{ fontSize: 14 }}>
+                        {card}
+                      </div>
+                    );
+                  })}
                 </div>
-              );
-            }
-          )}
-      </>
-    </div>
+              </div>
+            );
+          }
+        )}
+    </>
   );
 }

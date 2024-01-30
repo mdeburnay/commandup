@@ -5,7 +5,7 @@ interface IContainerProps {
 export const Container = ({ children }: IContainerProps) => {
   return (
     <div>
-      <main>{children}</main>
+      <main className="flex justify-center">{children}</main>
     </div>
   );
 };
