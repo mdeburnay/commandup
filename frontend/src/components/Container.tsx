@@ -4,8 +4,10 @@ interface IContainerProps {
 
 export const Container = ({ children }: IContainerProps) => {
   return (
-    <div>
-      <main className="flex justify-center">{children}</main>
-    </div>
+    <main className="flex justify-center flex-col items-center">
+      <header className="flex justify-center">Header</header>
+      {children}
+      <footer className="flex justify-center">Footer</footer>
+    </main>
   );
 };
