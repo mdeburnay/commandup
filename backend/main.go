@@ -47,7 +47,7 @@ func main() {
 		ctx.String(http.StatusOK, "Hello World")
 	})
 
-	r.GET("/api/cards/upgrades", handlers.GetCards)
+	r.GET("/api/cards/upgrades", handlers.GetCards(conn))
 
 	r.POST("/api/cards/upload-card-collection", handlers.UploadCardCollection(conn))
 
