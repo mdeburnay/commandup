@@ -47,9 +47,8 @@ func main() {
 		ctx.String(http.StatusOK, "Hello World")
 	})
 
-	r.GET("/api/cards/upgrades", handlers.GetCards(conn))
-
-	r.POST("/api/cards/upload-card-collection", handlers.UploadCardCollection(conn))
+	r.GET("cards/upgrades", handlers.GetCards(conn))
+	r.POST("cards/upload-card-collection", handlers.UploadCardCollection(conn))
 
 	port := "localhost:8080"
 	fmt.Printf("Server is running on port %s\n", port)
