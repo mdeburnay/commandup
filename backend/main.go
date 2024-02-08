@@ -1,14 +1,12 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"main/cards"
+	"main/internal"
 	"net/http"
-	"os"
 	"path/filepath"
-	"time"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -19,8 +17,6 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
-var counts int64
-
 func main() {
 
 	err := godotenv.Load()
@@ -28,7 +24,7 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 
-	conn := connectToDB()
+	conn := internal.ConnectToDB()
 	if conn == nil {
 		log.Panic("Database not connecting. Exiting.")
 	}
@@ -53,46 +49,4 @@ func main() {
 	port := "localhost:8080"
 	fmt.Printf("Server is running on port %s\n", port)
 	r.Run(port)
-}
-
-func openDB(dsn string) (*sql.DB, error) {
-	db, err := sql.Open("pgx", dsn)
-	if err != nil {
-		return nil, err
-	}
-
-	err = db.Ping()
-	if err != nil {
-		return nil, err
-	}
-
-	return db, nil
-}
-
-func connectToDB() *sql.DB {
-	dsn := os.Getenv("DSN")
-
-	if dsn == "" {
-		log.Panic("DSN not set. Exiting.")
-	}
-
-	for {
-		connection, err := openDB(dsn)
-		if counts > 5 {
-			log.Println("Database not connecting. Exiting...")
-			os.Exit(1)
-		}
-
-		if err != nil {
-			log.Println("Database not connecting. Retrying...")
-			counts++
-		} else {
-			log.Println("Connected to database")
-			return connection
-		}
-
-		log.Println("Backing off for " + fmt.Sprint(counts) + " seconds")
-		time.Sleep(time.Duration(counts) * time.Second)
-		continue
-	}
 }
