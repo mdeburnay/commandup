@@ -95,7 +95,7 @@ func GetCards(db *sql.DB) gin.HandlerFunc {
 			userCardCollection = append(userCardCollection, name)
 		}
 
-		apiURL := "https://json.edhrec.com/pages/precon/chaos-incarnate/kardur-doomscourge.json"
+		apiURL := "https://json.edhrec.com/pages/precon/revenant-recon/mirko-obsessive-theorist.json"
 
 		cardList, err := fetchApiResponse(apiURL)
 		if err != nil {
