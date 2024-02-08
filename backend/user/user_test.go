@@ -1,15 +1,39 @@
 package user
 
 import (
-	"database/sql"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
-func TestGetUserByID(db *sql.DB, id int) (User, error) {
-	user, err := GetUserByID(db, id)
+type MockUserRepository struct {
+	mock.Mock
+}
 
-	if err != nil {
-		return user, err
-	}
+type MockAuthRepo struct {
+	mock.Mock
+}
 
-	return user, nil
+func (mock *MockUserRepository) GetUser(id int) (User, error) {
+	args := mock.Called(id)
+	return args.Get(0).(User), args.Error(1)
+}
+
+func TestGetUser(t *testing.T) {
+	// Set mock values
+	// Create an instance of our mock repository
+	mockUserRepo := new(MockUserRepository)
+
+	// Setup expectations
+	mockUser := User{ID: 12345678}
+	mockUserRepo.On("GetUser", 12345678).Return(mockUser, nil)
+
+	// Call the function we want to test
+	result, err := mockUserRepo.GetUser(12345678)
+
+	// Assert expectations
+	mockUserRepo.AssertExpectations(t)
+	assert.Nil(t, err)
+	assert.Equal(t, mockUser, result)
 }

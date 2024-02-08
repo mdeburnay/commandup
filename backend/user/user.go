@@ -1,6 +1,8 @@
 package user
 
-import "database/sql"
+import (
+	"database/sql"
+)
 
 type User struct {
 	ID        int
@@ -11,9 +13,9 @@ type User struct {
 	UpdatedAt string
 }
 
-func GetUserByID(db *sql.DB, id int) (User, error) {
+func GetUser(db *sql.DB, id int) (User, error) {
 	var user User
-	err := db.QueryRow("SELECT * FROM users WHERE id = ?", id).Scan(&user.ID, &user.Username, &user.Email, &user.Password, &user.CreatedAt, &user.UpdatedAt)
+	err := db.QueryRow("SELECT username, email FROM users WHERE id = $1", id).Scan(&user.Username, &user.Email)
 	if err != nil {
 		return user, err
 	}
