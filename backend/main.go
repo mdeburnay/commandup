@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"main/handlers"
+	"main/cards"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -47,8 +47,8 @@ func main() {
 		ctx.String(http.StatusOK, "Hello World")
 	})
 
-	r.GET("cards/upgrades", handlers.GetCards(conn))
-	r.POST("cards/upload-card-collection", handlers.UploadCardCollection(conn))
+	r.GET("cards/upgrades", cards.GetCards(conn))
+	r.POST("cards/upload-card-collection", cards.UploadCardCollection(conn))
 
 	port := "localhost:8080"
 	fmt.Printf("Server is running on port %s\n", port)

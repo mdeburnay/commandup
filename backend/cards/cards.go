@@ -1,4 +1,4 @@
-package handlers
+package cards
 
 import (
 	"database/sql"
@@ -13,10 +13,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 )
-
-/********
-* TYPES *
-*********/
 
 type CardView struct {
 	Name string `json:"name"`
@@ -70,10 +66,6 @@ type Card struct {
 }
 
 type CardListResponse []CardCategory
-
-/************
-* FUNCTIONS *
-*************/
 
 func GetCards(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
