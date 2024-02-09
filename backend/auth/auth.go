@@ -15,24 +15,6 @@ type LoginRequest struct {
 	Password string `json:"password"`
 }
 
-func HashPassword(password string) (string, error) {
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	if err != nil {
-		return "", err
-	}
-
-	return string(hashedPassword), nil
-}
-
-func GetPassword(password string) (string, error) {
-	hashedPassword, err := HashPassword(password)
-	if err != nil {
-		return "", err
-	}
-
-	return hashedPassword, nil
-}
-
 func Login(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var loginReq LoginRequest

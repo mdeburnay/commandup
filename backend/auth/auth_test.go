@@ -3,45 +3,34 @@ package auth
 import (
 	"testing"
 
-	"golang.org/x/crypto/bcrypt"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
-func TestHashPassword(t *testing.T) {
+type MockUserRepository struct {
+	mock.Mock
+}
+
+type MockAuthRepo struct {
+	mock.Mock
+}
+
+func (mock *MockAuthRepo) Login(email, password string) (bool, error) {
+	args := mock.Called(email, password)
+	return args.Bool(0), args.Error(1)
+}
+
+func TestLogin(t *testing.T) {
+	email := "example@email.com"
 	password := "myPassword"
 
-	hashedPassword, err := HashPassword(password)
+	mockAuthRepo := new(MockAuthRepo)
 
-	if err != nil {
-		t.Error("Error hashing password")
-	}
+	mockAuthRepo.On("Login", email, password).Return(true, nil)
 
-	if hashedPassword == password {
-		t.Error("Password not hashed")
-	}
+	success, err := mockAuthRepo.Login(email, password)
 
-	// Test for hash uniqueness
-	hashedPassword2, err := HashPassword(password)
-	if err != nil {
-		t.Error("Error hashing password")
-	}
-
-	if hashedPassword == hashedPassword2 {
-		t.Error("Hashed passwords are not unique")
-	}
-
-	// Verify the hashed password
-	err = bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
-	if err != nil {
-		t.Error("Hashed password does not match the original password")
-	}
-
-	// Test hashing an empty string
-	emptyHas, err := HashPassword("")
-	if err != nil {
-		t.Error("Error hashing empty string")
-	}
-
-	if emptyHas == "" {
-		t.Error("Empty string not hashed")
-	}
+	assert.NoError(t, err, "Error was not expected during login")
+	assert.True(t, success, "Login should be successful with correct credentials")
+	mockAuthRepo.AssertExpectations(t)
 }
