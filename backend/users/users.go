@@ -2,25 +2,17 @@ package users
 
 import (
 	"database/sql"
+	"main/models"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
-type User struct {
-	ID        int
-	Email     string
-	Password  string
-	Username  string
-	CreatedAt string
-	UpdatedAt string
-}
-
 func GetUser(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.Param("id")
 
-		var user User
+		var user models.User
 
 		err := db.QueryRow("SELECT username, email FROM users WHERE id = $1", id).Scan(&user.Username, &user.Email)
 		if err != nil {

@@ -1,6 +1,7 @@
 package users
 
 import (
+	"main/models"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -15,9 +16,9 @@ type MockAuthRepo struct {
 	mock.Mock
 }
 
-func (mock *MockUserRepository) GetUser(id int) (User, error) {
+func (mock *MockUserRepository) GetUser(id int) (models.User, error) {
 	args := mock.Called(id)
-	return args.Get(0).(User), args.Error(1)
+	return args.Get(0).(models.User), args.Error(1)
 }
 
 func TestGetUser(t *testing.T) {
@@ -26,7 +27,7 @@ func TestGetUser(t *testing.T) {
 	mockUserRepo := new(MockUserRepository)
 
 	// Setup expectations
-	mockUser := User{ID: 12345678}
+	mockUser := models.User{ID: 12345678}
 	mockUserRepo.On("GetUser", 12345678).Return(mockUser, nil)
 
 	// Call the function we want to test

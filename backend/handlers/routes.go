@@ -20,7 +20,7 @@ func UserRoutes(r *gin.Engine, conn *sql.DB) {
 }
 
 func AuthRoutes(r *gin.Engine, conn *sql.DB) {
-	r.POST("auth/login", auth.Login("email@example.com", "examplepassword"))
+	r.POST("auth/login", auth.Login(conn))
 }
 
 func CardsRoutes(r *gin.Engine, conn *sql.DB) {
