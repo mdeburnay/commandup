@@ -1,4 +1,4 @@
-package cards
+package routers
 
 import (
 	"database/sql"
@@ -67,95 +67,94 @@ type Card struct {
 
 type CardListResponse []CardCategory
 
-func GetCards(db *sql.DB) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		rows, err := db.Query("SELECT name FROM cards")
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not fetch cards from database"})
-			return
-		}
+func GetCardUpgrades(c *gin.Context) {
 
-		var userCardCollection []string
-
-		for rows.Next() {
-			var name string
-			if err := rows.Scan(&name); err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning rows of users cards from database"})
-				return
-			}
-
-			userCardCollection = append(userCardCollection, name)
-		}
-
-		apiURL := "https://json.edhrec.com/pages/precon/revenant-recon/mirko-obsessive-theorist.json"
-
-		cardList, err := fetchApiResponse(apiURL)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
-			return
-		}
-
-		var userCardMap map[string]bool
-
-		var response CardListResponse
-		var cardsToCut []string   // Accumulate all cards to cut here
-		var cardsYouHave []string // Accumulate all cards you have here
-		var cardsYouNeed []string // Accumulate all cards you need here
-
-		userCardMap = make(map[string]bool)
-		for _, cardName := range userCardCollection {
-			userCardMap[cardName] = true
-		}
-
-		for _, cardListData := range cardList.Container.JsonDict.CardLists {
-			tag := cardListData.Tag
-			cardViews := cardListData.CardViews
-
-			// Process cards to cut separately to ensure they're always included
-			if tag == "cardstocut" || tag == "landstocut" {
-				for _, cardView := range cardViews {
-					cardsToCut = append(cardsToCut, cardView.Name)
-				}
-				continue
-			}
-
-			for _, cardView := range cardViews {
-				if _, exists := userCardMap[cardView.Name]; exists {
-					cardsYouHave = append(cardsYouHave, cardView.Name)
-				} else {
-					cardsYouNeed = append(cardsYouNeed, cardView.Name)
-				}
-			}
-		}
-
-		// After processing all card lists, create the categories
-		if len(cardsYouHave) > 0 {
-			response = append(response, CardCategory{
-				Title: "Cards You Have",
-				Cards: uniqueStrings(cardsYouHave), // Ensure uniqueness
-			})
-		}
-		if len(cardsYouNeed) > 0 {
-			response = append(response, CardCategory{
-				Title: "Cards You Need",
-				Cards: uniqueStrings(cardsYouNeed), // Ensure uniqueness
-			})
-		}
-		if len(cardsToCut) > 0 {
-			response = append(response, CardCategory{
-				Title: "Cards To Cut",
-				Cards: uniqueStrings(cardsToCut), // Ensure uniqueness
-			})
-		}
-
-		responseDataJSON, err := json.Marshal(response)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
-			return
-		}
-
-		c.Data(http.StatusOK, "application/json; charset=utf-8", responseDataJSON)
+	rows, err := db.Query("SELECT name FROM cards")
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not fetch cards from database"})
+		return
 	}
+
+	var userCardCollection []string
+
+	for rows.Next() {
+		var name string
+		if err := rows.Scan(&name); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning rows of users cards from database"})
+			return
+		}
+
+		userCardCollection = append(userCardCollection, name)
+	}
+
+	apiURL := "https://json.edhrec.com/pages/precon/revenant-recon/mirko-obsessive-theorist.json"
+
+	cardList, err := fetchApiResponse(apiURL)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
+		return
+	}
+
+	var userCardMap map[string]bool
+
+	var response CardListResponse
+	var cardsToCut []string   // Accumulate all cards to cut here
+	var cardsYouHave []string // Accumulate all cards you have here
+	var cardsYouNeed []string // Accumulate all cards you need here
+
+	userCardMap = make(map[string]bool)
+	for _, cardName := range userCardCollection {
+		userCardMap[cardName] = true
+	}
+
+	for _, cardListData := range cardList.Container.JsonDict.CardLists {
+		tag := cardListData.Tag
+		cardViews := cardListData.CardViews
+
+		// Process cards to cut separately to ensure they're always included
+		if tag == "cardstocut" || tag == "landstocut" {
+			for _, cardView := range cardViews {
+				cardsToCut = append(cardsToCut, cardView.Name)
+			}
+			continue
+		}
+
+		for _, cardView := range cardViews {
+			if _, exists := userCardMap[cardView.Name]; exists {
+				cardsYouHave = append(cardsYouHave, cardView.Name)
+			} else {
+				cardsYouNeed = append(cardsYouNeed, cardView.Name)
+			}
+		}
+	}
+
+	// After processing all card lists, create the categories
+	if len(cardsYouHave) > 0 {
+		response = append(response, CardCategory{
+			Title: "Cards You Have",
+			Cards: uniqueStrings(cardsYouHave), // Ensure uniqueness
+		})
+	}
+	if len(cardsYouNeed) > 0 {
+		response = append(response, CardCategory{
+			Title: "Cards You Need",
+			Cards: uniqueStrings(cardsYouNeed), // Ensure uniqueness
+		})
+	}
+	if len(cardsToCut) > 0 {
+		response = append(response, CardCategory{
+			Title: "Cards To Cut",
+			Cards: uniqueStrings(cardsToCut), // Ensure uniqueness
+		})
+	}
+
+	responseDataJSON, err := json.Marshal(response)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
+		return
+	}
+
+	c.Data(http.StatusOK, "application/json; charset=utf-8", responseDataJSON)
 }
 
 func UploadCardCollection(db *sql.DB) gin.HandlerFunc {

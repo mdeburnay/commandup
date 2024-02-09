@@ -1,4 +1,4 @@
-package internal
+package models
 
 import (
 	"database/sql"
@@ -9,6 +9,21 @@ import (
 )
 
 var counts int64
+
+var db *sql.DB
+
+func Init() {
+	conn := connectToDB()
+	if conn == nil {
+		log.Panic("Database not connecting. Exiting.")
+	}
+
+	log.Println("Connected to database")
+}
+
+func CloseDB() {
+	defer db.Close()
+}
 
 func openDB(dsn string) (*sql.DB, error) {
 	db, err := sql.Open("pgx", dsn)
@@ -24,7 +39,7 @@ func openDB(dsn string) (*sql.DB, error) {
 	return db, nil
 }
 
-func ConnectToDB() *sql.DB {
+func connectToDB() *sql.DB {
 	dsn := os.Getenv("DSN")
 
 	if dsn == "" {

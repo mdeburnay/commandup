@@ -1,4 +1,4 @@
-package auth
+package routers
 
 import (
 	"database/sql"

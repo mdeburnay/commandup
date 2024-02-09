@@ -1,4 +1,4 @@
-package users
+package routers
 
 import (
 	"database/sql"

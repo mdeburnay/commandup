@@ -2,27 +2,31 @@ package main
 
 import (
 	"log"
-	"main/handlers"
-	"main/internal"
+	"main/config"
+	"main/routers"
 	"net/http"
-	"path/filepath"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
-	conn := internal.ConnectToDB()
+	conn := config.ConnectToDB()
 	if conn == nil {
 		log.Panic("Database not connecting. Exiting.")
 	}
 
-	r := gin.Default()
-	setupMiddleware(r)
-	handlers.SetupRoutes(r, conn)
-
+	routersInit := routers.InitRouter()
 	port := "localhost:8080"
-	r.Run(port)
+
+	server := &http.Server{
+		Addr:    port,
+		Handler: routersInit,
+	}
+
+	log.Printf("Server started at %s", port)
+
+	server.ListenAndServe()
 }
 
 func setupMiddleware(r *gin.Engine) {
@@ -32,6 +36,4 @@ func setupMiddleware(r *gin.Engine) {
 		AllowMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 	}))
 
-	r.StaticFS("/static", http.Dir(filepath.Join(".", "frontend", "build", "static")))
-	r.GET("/", func(ctx *gin.Context) { ctx.String(http.StatusOK, "Hello World") })
 }
