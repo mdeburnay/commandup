@@ -6,6 +6,8 @@ import (
 	"log"
 	"os"
 	"time"
+
+	"github.com/joho/godotenv"
 )
 
 var counts int64
@@ -13,6 +15,11 @@ var counts int64
 var db *sql.DB
 
 func Init() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Panic("Error loading .env file")
+	}
+
 	conn := connectToDB()
 	if conn == nil {
 		log.Panic("Database not connecting. Exiting.")
