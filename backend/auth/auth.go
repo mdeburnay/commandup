@@ -58,8 +58,6 @@ func Login(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		// Here you would generate a token/session and return it
-		// For simplicity, we're just returning a success message
 		c.JSON(http.StatusOK, gin.H{"message": "Login successful", "userId": user.ID})
 	}
 }
