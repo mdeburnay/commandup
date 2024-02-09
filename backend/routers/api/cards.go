@@ -1,6 +1,7 @@
 package routers
 
 import (
+	"commandup/models"
 	"database/sql"
 	"encoding/csv"
 	"encoding/json"
@@ -68,8 +69,7 @@ type Card struct {
 type CardListResponse []CardCategory
 
 func GetCardUpgrades(c *gin.Context) {
-
-	rows, err := db.Query("SELECT name FROM cards")
+	rows, err := models.GetUserCards()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not fetch cards from database"})
 		return

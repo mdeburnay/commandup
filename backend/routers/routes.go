@@ -1,7 +1,7 @@
 package routers
 
 import (
-	routers "main/routers/api"
+	routers "commandup/routers/api"
 	"net/http"
 	"path/filepath"
 

@@ -1,8 +1,8 @@
 package routers
 
 import (
+	"commandup/models"
 	"database/sql"
-	"main/models"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
