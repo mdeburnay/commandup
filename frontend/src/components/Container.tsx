@@ -1,3 +1,6 @@
+import { Footer } from "./Footer";
+import { Header } from "./Header";
+
 interface IContainerProps {
   children: React.ReactNode;
 }
@@ -5,9 +8,9 @@ interface IContainerProps {
 export const Container = ({ children }: IContainerProps) => {
   return (
     <main className="flex flex-col items-center w-auto">
-      <header className="flex justify-center">Header</header>
+      <Header />
       {children}
-      <footer className="flex justify-center">Footer</footer>
+      <Footer />
     </main>
   );
 };
