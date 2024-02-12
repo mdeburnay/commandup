@@ -24,12 +24,11 @@ func Init() {
 		log.Panic("Error loading .env file")
 	}
 
-	conn := connectToDB()
-	if conn == nil {
+	db = connectToDB()
+	if db == nil {
 		log.Panic("Database not connecting. Exiting.")
 	}
 
-	log.Println("Connected to database")
 }
 
 func CloseDB() {
@@ -52,8 +51,6 @@ func openDB(dsn string) (*sql.DB, error) {
 
 func connectToDB() *sql.DB {
 	dsn := os.Getenv("DSN")
-
-	log.Println("DSN: ", dsn)
 
 	if dsn == "" {
 		log.Panic("DSN not set. Exiting.")
