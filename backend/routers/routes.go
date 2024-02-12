@@ -11,7 +11,6 @@ import (
 func InitRouter() *gin.Engine {
 	r := gin.Default()
 
-	r.Use(gin.Logger())
 	r.Use((gin.Recovery()))
 
 	r.StaticFS("/static", http.Dir(filepath.Join(".", "frontend", "build", "static")))
