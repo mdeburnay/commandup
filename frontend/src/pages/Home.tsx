@@ -20,7 +20,7 @@ function CardUpgrades(): JSX.Element {
     queryFn: () =>
       axios({
         method: "GET",
-        url: "http://localhost:8080/cards/upgrades",
+        url: "http://localhost:8080/api/cards/upgrades",
       }).then(({ data }) => {
         return data;
       }),

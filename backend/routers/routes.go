@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"path/filepath"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -14,6 +15,11 @@ func InitRouter() *gin.Engine {
 	r.Use((gin.Recovery()))
 
 	r.StaticFS("/static", http.Dir(filepath.Join(".", "frontend", "build", "static")))
+
+	r.Use(cors.New(cors.Config{
+		AllowOrigins: []string{"*"},
+		AllowMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+	}))
 
 	api := r.Group("/api/")
 	{
