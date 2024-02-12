@@ -8,6 +8,10 @@ import (
 	"time"
 
 	"github.com/joho/godotenv"
+
+	_ "github.com/jackc/pgconn"
+	_ "github.com/jackc/pgx/v5"
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 var counts int64
@@ -48,6 +52,8 @@ func openDB(dsn string) (*sql.DB, error) {
 
 func connectToDB() *sql.DB {
 	dsn := os.Getenv("DSN")
+
+	log.Println("DSN: ", dsn)
 
 	if dsn == "" {
 		log.Panic("DSN not set. Exiting.")
