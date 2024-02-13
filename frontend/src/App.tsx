@@ -10,7 +10,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "./index.css";
 
 // Components
-import { Container } from "./components/Container";
+import { Layout } from "./components/Layout";
 
 // Pages
 import { Home } from "./pages/Home";
@@ -24,7 +24,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <Router>
         <Routes>
-          <Route path="/" element={<Container />}>
+          <Route path="/" element={<Layout />}>
             <Route index element={<Home />} />
             <Route path="login" element={<Login />} />
           </Route>
