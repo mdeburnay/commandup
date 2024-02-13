@@ -7,7 +7,7 @@ interface IContainerProps {
 
 export const Container = ({ children }: IContainerProps) => {
   return (
-    <main className="flex flex-col w-full">
+    <main className="flex flex-col">
       <Header />
       {children}
       <Footer />

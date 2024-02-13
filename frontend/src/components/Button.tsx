@@ -6,7 +6,7 @@ interface IButtonProps {
 export const Button = ({ text, onClick }: IButtonProps) => {
   return (
     <button
-      className="w-64 bg-white text-blue rounded-lg tracking-wide border cursor-pointer"
+      className="w-auto px-6 py-1 bg-white text-blue rounded-lg tracking-wide border cursor-pointer"
       onClick={onClick}
     >
       {text}
