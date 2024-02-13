@@ -15,7 +15,10 @@ export enum ButtonType {
 export const Button = ({ text, onClick, type }: IButtonProps) => {
   if (type === ButtonType.LOGIN) {
     return (
-      <Link to={"/login"} className="text-blue w-auto cursor-pointer rounded-lg border bg-white px-6 py-1 tracking-wide">
+      <Link
+        to={"/login"}
+        className="text-blue w-auto cursor-pointer rounded-lg border bg-white px-6 py-1 tracking-wide"
+      >
         {text}
       </Link>
     );

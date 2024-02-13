@@ -1,21 +1,20 @@
-// Dependencies
+// Packages
 import { useRef } from "react";
+import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
+
+// Components
 import { Button } from "./Button";
 
 export function FileUpload(): JSX.Element {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleButtonClick = () => {
-    fileInputRef.current?.click();
-  };
+  const mutation = useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append("file", file);
 
-  const handleFileUpload = (file: File) => {
-    const formData = new FormData();
-    formData.append("file", file);
-
-    axios
-      .post(
+      return axios.post(
         "http://localhost:8080/api/cards/upload-card-collection",
         formData,
         {
@@ -23,19 +22,18 @@ export function FileUpload(): JSX.Element {
             "Content-Type": "multipart/form-data",
           },
         }
-      )
-      .then((response) => {
-        console.log("File uploaded successfully:", response.data);
-      })
-      .catch((error) => {
-        console.error("Error uploading file:", error);
-      });
+      );
+    },
+  });
+
+  const handleButtonClick = () => {
+    fileInputRef.current?.click();
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
       const file = event.target.files[0];
-      handleFileUpload(file); // Upload the file as soon as it's selected
+      mutation.mutate(file);
     }
   };
 
@@ -48,6 +46,16 @@ export function FileUpload(): JSX.Element {
         onChange={handleFileChange}
         ref={fileInputRef}
       />
+      {mutation.isPending && <div>Uploading...</div>}
+      {mutation.isError && (
+        <div>
+          An error occurred:{" "}
+          {mutation.error instanceof Error
+            ? mutation.error.message
+            : "Unknown error"}
+        </div>
+      )}
+      {mutation.isSuccess && <div>File uploaded successfully!</div>}
     </>
   );
 }
