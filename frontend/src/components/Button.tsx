@@ -4,5 +4,12 @@ interface IButtonProps {
 }
 
 export const Button = ({ text, onClick }: IButtonProps) => {
-  return <button>{text}</button>;
+  return (
+    <button
+      className="w-64 bg-white text-blue rounded-lg tracking-wide border cursor-pointer"
+      onClick={onClick}
+    >
+      {text}
+    </button>
+  );
 };

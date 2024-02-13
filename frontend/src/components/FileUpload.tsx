@@ -1,7 +1,15 @@
 // Dependencies
+import { useRef } from "react";
 import axios from "axios";
+import { Button } from "./Button";
 
 export function FileUpload(): JSX.Element {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleButtonClick = () => {
+    fileInputRef.current?.click();
+  };
+
   const handleFileUpload = (file: File) => {
     const formData = new FormData();
     formData.append("file", file);
@@ -32,11 +40,14 @@ export function FileUpload(): JSX.Element {
   };
 
   return (
-    <label className="w-64 flex flex-col items-center px-2 py-2 bg-white text-blue rounded-lg shadow-lg tracking-wide uppercase border border-blue cursor-pointer hover:bg-blue hover:text-white">
-      <span className="mt-2 text-xs text-center">
-        Upload Your Card Collection
-      </span>
-      <input type="file" className="hidden" onChange={handleFileChange} />
-    </label>
+    <>
+      <Button text="Upload Collection" onClick={handleButtonClick} />
+      <input
+        type="file"
+        className="hidden"
+        onChange={handleFileChange}
+        ref={fileInputRef}
+      />
+    </>
   );
 }
