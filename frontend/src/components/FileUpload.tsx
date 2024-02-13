@@ -32,13 +32,11 @@ export function FileUpload(): JSX.Element {
   };
 
   return (
-    <div>
-      <label className="w-64 flex flex-col items-center px-2 py-2 bg-white text-blue rounded-lg shadow-lg tracking-wide uppercase border border-blue cursor-pointer hover:bg-blue hover:text-white">
-        <span className="mt-2 text-xs text-center">
-          Upload Your Card Collection
-        </span>
-        <input type="file" className="hidden" onChange={handleFileChange} />
-      </label>
-    </div>
+    <label className="w-64 flex flex-col items-center px-2 py-2 bg-white text-blue rounded-lg shadow-lg tracking-wide uppercase border border-blue cursor-pointer hover:bg-blue hover:text-white">
+      <span className="mt-2 text-xs text-center">
+        Upload Your Card Collection
+      </span>
+      <input type="file" className="hidden" onChange={handleFileChange} />
+    </label>
   );
 }

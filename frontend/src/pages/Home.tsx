@@ -2,13 +2,9 @@
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 
-// Components
-import { FileUpload } from "../components/FileUpload";
-
 export const Home = () => {
   return (
     <>
-      <FileUpload />
       <CardUpgrades />
     </>
   );
