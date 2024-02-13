@@ -1,15 +1,16 @@
+// Imports
+import { Outlet, useNavigate } from "react-router-dom";
+
+// Components
 import { Footer } from "./Footer";
 import { Header } from "./Header";
 
-interface IContainerProps {
-  children: React.ReactNode;
-}
-
-export const Container = ({ children }: IContainerProps) => {
+export const Container = () => {
+  const navigate = useNavigate();
   return (
     <main className="flex flex-col">
       <Header />
-      {children}
+      <Outlet />
       <Footer />
     </main>
   );

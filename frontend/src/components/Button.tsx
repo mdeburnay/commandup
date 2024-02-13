@@ -2,6 +2,7 @@ interface IButtonProps {
   text: string;
   onClick?: () => void;
   type?: ButtonType;
+  navigation?: any;
 }
 
 enum ButtonType {
@@ -9,12 +10,12 @@ enum ButtonType {
   UPLOAD = "upload",
 }
 
-export const Button = ({ text, onClick, type }: IButtonProps) => {
+export const Button = ({ text, onClick, type, navigation }: IButtonProps) => {
   if (type === ButtonType.LOGIN) {
     return (
       <button
-        className="w-auto px-6 py-1 bg-white text-blue rounded-lg tracking-wide border cursor-pointer"
-        onClick={onClick}
+        className="text-blue w-auto cursor-pointer rounded-lg border bg-white px-6 py-1 tracking-wide"
+        onClick={() => navigation("login")}
       >
         {text}
       </button>
@@ -23,7 +24,7 @@ export const Button = ({ text, onClick, type }: IButtonProps) => {
 
   return (
     <button
-      className="w-auto px-6 py-1 bg-white text-blue rounded-lg tracking-wide border cursor-pointer"
+      className="text-blue w-auto cursor-pointer rounded-lg border bg-white px-6 py-1 tracking-wide"
       onClick={onClick}
     >
       {text}

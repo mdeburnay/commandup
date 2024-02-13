@@ -27,13 +27,13 @@ function CardUpgrades(): JSX.Element {
   }
 
   return (
-    <div className="w-full justify-evenly flex flex-row">
+    <div className="flex w-full flex-row justify-evenly">
       {data &&
         data.map(
           ({ title, cards }: { title: string; cards: string[] }, i: number) => {
             return (
               <div key={i}>
-                <h2 className="text-xl py-4">{title}</h2>
+                <h2 className="py-4 text-xl">{title}</h2>
                 <div>
                   {cards.map((card: string, i: number) => {
                     return (
@@ -45,7 +45,7 @@ function CardUpgrades(): JSX.Element {
                 </div>
               </div>
             );
-          }
+          },
         )}
     </div>
   );
