@@ -40,7 +40,7 @@ func InitRouter() *gin.Engine {
 
 		// Card routes
 		api.GET("cards/upgrades", routers.GetCardUpgrades)
-		api.POST("cards/upload-card-collection", routers.UploadCardCollection(nil))
+		api.POST("cards/upload-card-collection", routers.UploadCardCollection)
 
 		// User routes
 		api.GET("users/:id", routers.GetUser(nil))
