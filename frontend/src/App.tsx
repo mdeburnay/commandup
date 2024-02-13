@@ -3,7 +3,6 @@ import {
   BrowserRouter as Router,
   Route,
   Routes,
-  useNavigate,
 } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
@@ -27,7 +26,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Container />}>
             <Route index element={<Home />} />
-            <Route index element={<Login />} />
+            <Route path="login" element={<Login />} />
           </Route>
         </Routes>
       </Router>
