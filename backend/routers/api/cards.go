@@ -216,7 +216,7 @@ func fetchApiResponse(apiURL string) (ApiResponse, error) {
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		return apiResponse, fmt.Errorf("Received non-OK response: %s", response.Status)
+		return apiResponse, fmt.Errorf("received non-ok response: %s", response.Status)
 	}
 
 	body, err := io.ReadAll(response.Body)
@@ -231,62 +231,6 @@ func fetchApiResponse(apiURL string) (ApiResponse, error) {
 	}
 
 	return apiResponse, nil
-}
-
-func readCSVFile(filePath string) []string {
-	// Open the CSV file
-	file, err := os.Open(filePath)
-	if err != nil {
-		fmt.Println("Error opening CSV file:", err)
-		return nil
-	}
-	defer file.Close()
-
-	// Create a CSV reader
-	reader := csv.NewReader(file)
-
-	// Read the remaining CSV data into a slice of strings
-	var cards []string
-	for {
-		row, err := reader.Read()
-		if err == io.EOF {
-			break // End of file
-		} else if err != nil {
-			fmt.Println("Error reading CSV data:", err)
-			return nil
-		}
-
-		// Add the row to the slice of cards
-		cards = append(cards, row...)
-	}
-
-	return cards
-}
-
-func compareCardCollections(cardViews []CardView, userCardCollection []string) (matchingCards []string, nonMatchingCards []string) {
-	cardMap := make(map[string]bool)
-
-	for _, card := range userCardCollection {
-		cardMap[card] = true
-	}
-
-	for _, cardView := range cardViews {
-		if _, exists := cardMap[cardView.Name]; exists {
-			matchingCards = append(matchingCards, cardView.Name)
-		} else {
-			nonMatchingCards = append(nonMatchingCards, cardView.Name)
-		}
-	}
-
-	return
-}
-
-func extractCardNames(cardViews []CardView) []string {
-	var cardNames []string
-	for _, card := range cardViews {
-		cardNames = append(cardNames, card.Name)
-	}
-	return cardNames
 }
 
 func uniqueStrings(input []string) []string {
