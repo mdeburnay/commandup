@@ -2,12 +2,12 @@ package routers
 
 import (
 	"commandup/models"
+	"commandup/utils"
 	"database/sql"
 	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"golang.org/x/crypto/bcrypt"
 )
 
 type LoginRequest struct {
@@ -36,7 +36,7 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(loginReq.Password)); err != nil {
+	if err := utils.CheckPassword(loginReq.Password, user.Password); err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid password"})
 		return
 	}
