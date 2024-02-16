@@ -25,3 +25,19 @@ func GetUser(db *sql.DB) gin.HandlerFunc {
 		c.JSON((http.StatusOK), user)
 	}
 }
+
+func CreateUser(c *gin.Context) {
+	var user models.User
+
+	if err := c.ShouldBindJSON(&user); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := models.CreateUser(user.Email, user.Password, user.Username); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "User created successfully"})
+}

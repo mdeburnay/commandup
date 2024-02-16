@@ -43,7 +43,8 @@ func InitRouter() *gin.Engine {
 		api.POST("cards/upload-card-collection", routers.UploadCardCollection)
 
 		// User routes
-		api.GET("users/:id", routers.GetUser(nil))
+		api.GET("user/:id", routers.GetUser(nil))
+		api.POST("user/create", routers.CreateUser)
 	}
 
 	return r
