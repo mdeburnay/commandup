@@ -1,6 +1,7 @@
 package models
 
 import (
+	"commandup/utils"
 	"time"
 
 	"github.com/google/uuid"
@@ -20,7 +21,13 @@ func GetUser(email string) (user User, err error) {
 	return user, err
 }
 
-func CreateUser(email string, password string) (err error) {
-	_, err = db.Exec("INSERT INTO users (id, email, password, created_at, updated_at) VALUES ($1, $2, $3, $4, $5)", uuid.New(), email, password, time.Now(), time.Now())
+func CreateUser(email string, password string, username string) (err error) {
+
+	hashedPassword, err := utils.HashPassword(password)
+	if err != nil {
+		return err
+	}
+
+	_, err = db.Exec("INSERT INTO users (id, email, password, username, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6)", uuid.New(), email, string(hashedPassword), username, time.Now(), time.Now())
 	return err
 }
