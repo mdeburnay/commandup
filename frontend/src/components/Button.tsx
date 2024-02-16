@@ -3,20 +3,14 @@ import { Link } from "react-router-dom";
 interface IButtonProps {
   text: string;
   onClick?: () => void;
-  type?: ButtonType;
-  navigation?: any;
+  url?: string;
 }
 
-export enum ButtonType {
-  LOGIN,
-  UPLOAD,
-}
-
-export const Button = ({ text, onClick, type }: IButtonProps) => {
-  if (type === ButtonType.LOGIN) {
+export const Button = ({ text, onClick, url }: IButtonProps) => {
+  if (url) {
     return (
       <Link
-        to={"/login"}
+        to={url}
         className="text-blue w-auto cursor-pointer rounded-lg border bg-white px-6 py-1 tracking-wide"
       >
         {text}

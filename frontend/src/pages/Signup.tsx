@@ -4,23 +4,22 @@ import axios from "axios";
 
 // Hooks
 import { useState } from "react";
-import { Button } from "../components/Button";
 
-interface ILoginProps {
+interface ISignupProps {
   email: string;
   password: string;
 }
 
-export const Login = () => {
+export const Signup = () => {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [error, setError] = useState<string>("");
   const [success, setSuccess] = useState<boolean>(false);
 
   const mutation = useMutation({
-    mutationFn: async ({ email, password }: ILoginProps) => {
+    mutationFn: async ({ email, password }: ISignupProps) => {
       return axios.post(
-        "http://localhost:8080/api/auth/login",
+        "http://localhost:8080/api/auth/signup",
         { email, password },
         {
           headers: {
@@ -67,12 +66,10 @@ export const Login = () => {
           type="submit"
           className="flex p-1 rounded-md m-2 hover:cursor-pointer"
         >
-          Login
+          Signup
         </button>
         {error && <div className="text-red-500">{error}</div>}
-        {success && <div>Login Successful!</div>}
-        <div className="p-4">Don't have an account? </div>
-        <Button text="Sign Up" url="/signup" />
+        {success && <div>Signup Successful!</div>}
       </form>
     </>
   );
