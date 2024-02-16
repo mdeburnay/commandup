@@ -8,11 +8,13 @@ import { useState } from "react";
 interface ISignupProps {
   email: string;
   password: string;
+  username: string;
 }
 
 export const Signup = () => {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
+  const [username, setUsername] = useState<string>("");
   const [error, setError] = useState<string>("");
   const [success, setSuccess] = useState<boolean>(false);
 
@@ -20,7 +22,7 @@ export const Signup = () => {
     mutationFn: async ({ email, password }: ISignupProps) => {
       return axios.post(
         "http://localhost:8080/api/auth/signup",
-        { email, password },
+        { email, password, username },
         {
           headers: {
             "Content-Type": "application/json",
@@ -39,7 +41,7 @@ export const Signup = () => {
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    mutation.mutate({ email, password });
+    mutation.mutate({ email, password, username });
   };
 
   return (
@@ -54,6 +56,13 @@ export const Signup = () => {
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+        />
+        <input
+          className="flex w-80 p-1 rounded-md m-2"
+          type="text"
+          placeholder="Username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
         />
         <input
           className="flex w-80 p-1 rounded-md m-2"
