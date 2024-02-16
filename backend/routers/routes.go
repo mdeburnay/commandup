@@ -36,7 +36,8 @@ func InitRouter() *gin.Engine {
 		})
 
 		// Auth routes
-		api.GET("auth/login", routers.Login)
+		api.POST("auth/login", routers.Login)
+		api.POST("auth/signup", routers.Signup)
 
 		// Card routes
 		api.GET("cards/upgrades", routers.GetCardUpgrades)
