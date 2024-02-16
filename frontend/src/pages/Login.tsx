@@ -43,32 +43,34 @@ export const Login = () => {
   };
 
   return (
-    <form
-      className="flex justify-center items-center flex-col"
-      onSubmit={handleSubmit}
-    >
-      <input
-        className="flex w-80 p-1 rounded-md m-2"
-        type="text"
-        placeholder="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      />
-      <input
-        className="flex w-80 p-1 rounded-md m-2"
-        type="text"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
-      <button
-        type="submit"
-        className="flex p-1 rounded-md m-2 hover:cursor-pointer"
+    <>
+      <form
+        className="flex justify-center items-center flex-col"
+        onSubmit={handleSubmit}
       >
-        Login
-      </button>
-      {error && <div className="text-red-500">{error}</div>}
-      {success && <div>Login Successful!</div>}
-    </form>
+        <input
+          className="flex w-80 p-1 rounded-md m-2"
+          type="text"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+        <input
+          className="flex w-80 p-1 rounded-md m-2"
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        <button
+          type="submit"
+          className="flex p-1 rounded-md m-2 hover:cursor-pointer"
+        >
+          Login
+        </button>
+        {error && <div className="text-red-500">{error}</div>}
+        {success && <div>Login Successful!</div>}
+      </form>
+    </>
   );
 };
