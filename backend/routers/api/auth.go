@@ -65,5 +65,7 @@ func Signup(c *gin.Context) {
 		return
 	}
 
+	log.Default().Printf("User created for %s", user.Email)
+
 	c.JSON(http.StatusCreated, gin.H{"message": "User created", "userId": user.ID})
 }
