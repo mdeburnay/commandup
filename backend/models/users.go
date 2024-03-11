@@ -2,8 +2,6 @@ package models
 
 import (
 	"time"
-
-	"github.com/google/uuid"
 )
 
 type User struct {
@@ -21,6 +19,6 @@ func GetUser(email string) (user User, err error) {
 }
 
 func CreateUser(email string, password string, username string) (err error) {
-	_, err = db.Exec("INSERT INTO users (id, email, password, username, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6)", uuid.New(), email, password, username, time.Now(), time.Now())
+	_, err = db.Exec("INSERT INTO users (email, password, username, created_at, updated_at) VALUES ($1, $2, $3, $4, $5)", email, password, username, time.Now(), time.Now())
 	return err
 }
