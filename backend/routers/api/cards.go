@@ -66,8 +66,21 @@ type Card struct {
 
 type CardListResponse []CardCategory
 
+type CommanderPrecon struct {
+	Precon    string `json:"precon"`
+	Commander string `json:"commander"`
+}
+
 func GetCardUpgrades(c *gin.Context) {
 	rows, err := models.GetUserCards()
+
+	var commanderPrecon CommanderPrecon
+
+	if err := c.ShouldBindJSON(&commanderPrecon); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not fetch cards from database"})
 		return
@@ -85,9 +98,7 @@ func GetCardUpgrades(c *gin.Context) {
 		userCardCollection = append(userCardCollection, name)
 	}
 
-	// https://edhrec.com/precon/mutant-menace/the-wise-mothman
-
-	apiURL := "https://json.edhrec.com/pages/precon/mutant-menace/the-wise-mothman.json"
+	apiURL := "https://json.edhrec.com/pages/precon/" + commanderPrecon.Precon + "mutant-menace/" + commanderPrecon.Commander + ".json"
 
 	cardList, err := fetchApiResponse(apiURL)
 	if err != nil {
