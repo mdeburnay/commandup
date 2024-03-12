@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 
 interface IButtonProps {
   text: string;
-  onClick?: () => void;
+  onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
   url?: string;
   styles?: string | IButtonStyles;
 }

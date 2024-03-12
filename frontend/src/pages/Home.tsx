@@ -1,9 +1,10 @@
 // Dependencies
+import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
 
 // Component
-import { Button, IButtonStyles } from "../components/Button";
+import { Button } from "../components/Button";
 
 export const Home = () => {
   return (
@@ -14,7 +15,10 @@ export const Home = () => {
 };
 
 function CardUpgrades(): JSX.Element {
-  const { error, data } = useMutation({
+  const [commander, setCommander] = useState("");
+  const [deckName, setDeckName] = useState("");
+
+  const mutation = useMutation({
     mutationFn: async ({ data }: any) => {
       return axios
         .post("http://localhost:8080/api/cards/upgrades", data, {
@@ -23,14 +27,23 @@ function CardUpgrades(): JSX.Element {
           },
         })
         .then(({ data }) => {
+          console.log("Returned data in FE: " + data);
           return data;
         });
     },
   });
 
-  if (error) {
-    return <div>{error.toString()}</div>;
-  }
+  const handleSubmit = (e: any) => {
+    e.preventDefault();
+    const payload = {
+      commander: commander,
+      precon: deckName,
+    };
+
+    console.log(payload);
+
+    mutation.mutate({ data: payload });
+  };
 
   /**
    * TODO:
@@ -49,6 +62,7 @@ function CardUpgrades(): JSX.Element {
               className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
               id="commander"
               type="text"
+              onChange={(e) => setCommander(e.target.value)}
               placeholder="e.g Kardur, Doomscourge"
             />
           </div>
@@ -57,19 +71,20 @@ function CardUpgrades(): JSX.Element {
               className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
               id="deck-name"
               type="text"
+              onChange={(e) => setDeckName(e.target.value)}
               placeholder="e.g Chaos Incarnate"
             />
           </div>
           <Button
             text="Submit"
             styles="cursor-pointer rounded-lg border bg-white px-3 tracking-wide h-10"
-            onClick={() => {}}
+            onClick={handleSubmit}
           />
         </form>
       </div>
       <div className="flex w-full flex-row justify-evenly">
-        {data &&
-          data.map(
+        {mutation.data &&
+          mutation.data.map(
             (
               { title, cards }: { title: string; cards: string[] },
               i: number

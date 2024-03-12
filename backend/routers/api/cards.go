@@ -74,12 +74,18 @@ type CommanderPrecon struct {
 func GetCardUpgrades(c *gin.Context) {
 	rows, err := models.GetUserCards()
 
+	log.Default().Println("Fetching user cards")
+
+	log.Default().Println("Incoming payload: ", c.Request.Body)
+
 	var commanderPrecon CommanderPrecon
 
 	if err := c.ShouldBindJSON(&commanderPrecon); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+
+	log.Default().Println("Commander Precon: ", commanderPrecon)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not fetch cards from database"})
@@ -99,6 +105,8 @@ func GetCardUpgrades(c *gin.Context) {
 	}
 
 	apiURL := "https://json.edhrec.com/pages/precon/" + commanderPrecon.Precon + "/" + commanderPrecon.Commander + ".json"
+
+	log.Default().Println("Fetching API response from URL: ", apiURL)
 
 	// apiURL := "https://json.edhrec.com/pages/precon/mutant-menace/the-wise-mothman.json"
 
