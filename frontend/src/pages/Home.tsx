@@ -2,6 +2,9 @@
 import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
 
+// Component
+import { Button, IButtonStyles } from "../components/Button";
+
 export const Home = () => {
   return (
     <>
@@ -40,11 +43,8 @@ function CardUpgrades(): JSX.Element {
   return (
     <main>
       <div className="max-w-lg flex-row">
-        <form className="flex flex-row bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
-          <div className="mb-4 mx-5">
-            <label className="block text-gray-700 text-sm font-bold mb-2">
-              Commander
-            </label>
+        <form className="flex flex-row justify-center items-center bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+          <div className="mx-5">
             <input
               className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
               id="commander"
@@ -52,10 +52,7 @@ function CardUpgrades(): JSX.Element {
               placeholder="e.g Kardur, Doomscourge"
             />
           </div>
-          <div className="mb-4 mx-5">
-            <label className="block text-gray-700 text-sm font-bold mb-2">
-              Deck Name
-            </label>
+          <div className="mx-5">
             <input
               className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
               id="deck-name"
@@ -63,6 +60,11 @@ function CardUpgrades(): JSX.Element {
               placeholder="e.g Chaos Incarnate"
             />
           </div>
+          <Button
+            text="Submit"
+            styles="cursor-pointer rounded-lg border bg-white px-3 tracking-wide h-10"
+            onClick={() => {}}
+          />
         </form>
       </div>
       <div className="flex w-full flex-row justify-evenly">
