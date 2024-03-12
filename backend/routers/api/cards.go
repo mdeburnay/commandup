@@ -98,7 +98,9 @@ func GetCardUpgrades(c *gin.Context) {
 		userCardCollection = append(userCardCollection, name)
 	}
 
-	apiURL := "https://json.edhrec.com/pages/precon/" + commanderPrecon.Precon + "mutant-menace/" + commanderPrecon.Commander + ".json"
+	apiURL := "https://json.edhrec.com/pages/precon/" + commanderPrecon.Precon + "/" + commanderPrecon.Commander + ".json"
+
+	// apiURL := "https://json.edhrec.com/pages/precon/mutant-menace/the-wise-mothman.json"
 
 	cardList, err := fetchApiResponse(apiURL)
 	if err != nil {
