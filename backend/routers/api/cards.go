@@ -104,19 +104,22 @@ func GetCardUpgrades(c *gin.Context) {
 		userCardCollection = append(userCardCollection, name)
 	}
 
-	// Format the incoming payload strings to match the API URL format
-	formattedPreconName := formatString(commanderPrecon.Precon)
-	formattedCommanderName := formatString(commanderPrecon.Commander)
+	apiUrl := generateApiUrl(&commanderPrecon.Precon, commanderPrecon.Commander)
 
-	apiURL := "https://json.edhrec.com/pages/precon/" + formattedPreconName + "/" + formattedCommanderName + ".json"
+	log.Default().Println("Fetching API response from URL: ", apiUrl)
 
-	log.Default().Println("Fetching API response from URL: ", apiURL)
-
-	cardList, err := fetchApiResponse(apiURL)
+	cardList, err := fetchApiResponse(apiUrl)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
 		return
 	}
+
+	log.Default().Println("API response fetched")
+
+	// log outn response
+	log.Default().Println("API response: ", cardList)
+
+	return
 
 	var userCardMap map[string]bool
 
@@ -285,4 +288,24 @@ func formatString(input string) string {
 	}, hypenStr)
 
 	return sanitiseStr
+}
+
+func generateApiUrl(precon *string, commander string) string {
+	baseUrl := "https://json.edhrec.com/pages/commanders/"
+	if precon != nil {
+		fmt.Println("Precon: ", *precon) // Dereferenced value of precon
+	} else {
+		fmt.Println("Precon is nil")
+	}
+	fmt.Println("Commander: ", commander)
+
+	if precon != nil && *precon != "" { // Check also if precon is not an empty string
+		formattedPreconName := formatString(*precon)
+		formattedCommanderName := formatString(commander)
+		return "https://json.edhrec.com/pages/precon/" + formattedPreconName + "/" + formattedCommanderName + ".json"
+	}
+
+	// If no precon is provided, only format the commander name.
+	formattedCommanderName := formatString(commander)
+	return baseUrl + formattedCommanderName + ".json"
 }
