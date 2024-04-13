@@ -76,8 +76,6 @@ func GetCardUpgrades(c *gin.Context) {
 
 	log.Default().Println("Fetching user cards")
 
-	log.Default().Println("Incoming payload: ", c.Request.Body)
-
 	var commanderPrecon CommanderPrecon
 
 	if err := c.ShouldBindJSON(&commanderPrecon); err != nil {
@@ -102,13 +100,11 @@ func GetCardUpgrades(c *gin.Context) {
 		}
 
 		userCardCollection = append(userCardCollection, name)
-	}
+	}g
 
 	apiURL := "https://json.edhrec.com/pages/precon/" + commanderPrecon.Precon + "/" + commanderPrecon.Commander + ".json"
 
 	log.Default().Println("Fetching API response from URL: ", apiURL)
-
-	// apiURL := "https://json.edhrec.com/pages/precon/mutant-menace/the-wise-mothman.json"
 
 	cardList, err := fetchApiResponse(apiURL)
 	if err != nil {
