@@ -9,6 +9,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
+	"unicode"
 
 	"github.com/gin-gonic/gin"
 )
@@ -100,9 +102,13 @@ func GetCardUpgrades(c *gin.Context) {
 		}
 
 		userCardCollection = append(userCardCollection, name)
-	}g
+	}
 
-	apiURL := "https://json.edhrec.com/pages/precon/" + commanderPrecon.Precon + "/" + commanderPrecon.Commander + ".json"
+	// Format the incoming payload strings to match the API URL format
+	formattedPreconName := formatString(commanderPrecon.Precon)
+	formattedCommanderName := formatString(commanderPrecon.Commander)
+
+	apiURL := "https://json.edhrec.com/pages/precon/" + formattedPreconName + "/" + formattedCommanderName + ".json"
 
 	log.Default().Println("Fetching API response from URL: ", apiURL)
 
@@ -264,4 +270,19 @@ func uniqueStrings(input []string) []string {
 	}
 
 	return result
+}
+
+func formatString(input string) string {
+	lowercaseStr := strings.ToLower(input)
+
+	hypenStr := strings.Replace(lowercaseStr, " ", "-", -1)
+
+	sanitiseStr := strings.Map(func(r rune) rune {
+		if unicode.IsLetter(r) || r == '-' {
+			return r
+		}
+		return -1
+	}, hypenStr)
+
+	return sanitiseStr
 }
