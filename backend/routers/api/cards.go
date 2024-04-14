@@ -73,10 +73,10 @@ type CommanderPrecon struct {
 	Commander string `json:"commander"`
 }
 
+var userCardCollection []string
+
 func GetCardUpgrades(c *gin.Context) {
 	rows, err := models.GetUserCards()
-
-	log.Default().Println("Fetching user cards")
 
 	var commanderPrecon CommanderPrecon
 
@@ -85,14 +85,10 @@ func GetCardUpgrades(c *gin.Context) {
 		return
 	}
 
-	log.Default().Println("Commander Precon: ", commanderPrecon)
-
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not fetch cards from database"})
 		return
 	}
-
-	var userCardCollection []string
 
 	for rows.Next() {
 		var name string
@@ -109,72 +105,16 @@ func GetCardUpgrades(c *gin.Context) {
 	log.Default().Println("Fetching API response from URL: ", apiUrl)
 
 	cardList, err := fetchApiResponse(apiUrl)
+
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
 		return
 	}
 
-	log.Default().Println("API response fetched")
+	// Depending on whether the user specifies for a precon or not, the response will be different
+	cardListResponse := formatCardListResponse(cardList, userCardCollection)
 
-	// log outn response
-	log.Default().Println("API response: ", cardList)
-
-	return
-
-	var userCardMap map[string]bool
-
-	var response CardListResponse
-	var cardsToCut []string   // Accumulate all cards to cut here
-	var cardsYouHave []string // Accumulate all cards you have here
-	var cardsYouNeed []string // Accumulate all cards you need here
-
-	userCardMap = make(map[string]bool)
-	for _, cardName := range userCardCollection {
-		userCardMap[cardName] = true
-	}
-
-	for _, cardListData := range cardList.Container.JsonDict.CardLists {
-		tag := cardListData.Tag
-		cardViews := cardListData.CardViews
-
-		// Process cards to cut separately to ensure they're always included
-		if tag == "cardstocut" || tag == "landstocut" {
-			for _, cardView := range cardViews {
-				cardsToCut = append(cardsToCut, cardView.Name)
-			}
-			continue
-		}
-
-		for _, cardView := range cardViews {
-			if _, exists := userCardMap[cardView.Name]; exists {
-				cardsYouHave = append(cardsYouHave, cardView.Name)
-			} else {
-				cardsYouNeed = append(cardsYouNeed, cardView.Name)
-			}
-		}
-	}
-
-	// After processing all card lists, create the categories
-	if len(cardsYouHave) > 0 {
-		response = append(response, CardCategory{
-			Title: "Cards You Have",
-			Cards: uniqueStrings(cardsYouHave), // Ensure uniqueness
-		})
-	}
-	if len(cardsYouNeed) > 0 {
-		response = append(response, CardCategory{
-			Title: "Cards You Need",
-			Cards: uniqueStrings(cardsYouNeed), // Ensure uniqueness
-		})
-	}
-	if len(cardsToCut) > 0 {
-		response = append(response, CardCategory{
-			Title: "Cards To Cut",
-			Cards: uniqueStrings(cardsToCut), // Ensure uniqueness
-		})
-	}
-
-	responseDataJSON, err := json.Marshal(response)
+	responseDataJSON, err := json.Marshal(cardListResponse)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
 		return
@@ -308,4 +248,61 @@ func generateApiUrl(precon *string, commander string) string {
 	// If no precon is provided, only format the commander name.
 	formattedCommanderName := formatString(commander)
 	return baseUrl + formattedCommanderName + ".json"
+}
+
+func formatCardListResponse(cardList ApiResponse, userCardCollection []string) CardListResponse {
+	var userCardMap map[string]bool
+
+	var response CardListResponse
+	var cardsToCut []string   // Accumulate all cards to cut here
+	var cardsYouHave []string // Accumulate all cards you have here
+	var cardsYouNeed []string // Accumulate all cards you need here
+
+	userCardMap = make(map[string]bool)
+	for _, cardName := range userCardCollection {
+		userCardMap[cardName] = true
+	}
+
+	for _, cardListData := range cardList.Container.JsonDict.CardLists {
+		tag := cardListData.Tag
+		cardViews := cardListData.CardViews
+
+		// Process cards to cut separately to ensure they're always included
+		if tag == "cardstocut" || tag == "landstocut" {
+			for _, cardView := range cardViews {
+				cardsToCut = append(cardsToCut, cardView.Name)
+			}
+			continue
+		}
+
+		for _, cardView := range cardViews {
+			if _, exists := userCardMap[cardView.Name]; exists {
+				cardsYouHave = append(cardsYouHave, cardView.Name)
+			} else {
+				cardsYouNeed = append(cardsYouNeed, cardView.Name)
+			}
+		}
+	}
+
+	// After processing all card lists, create the categories
+	if len(cardsYouHave) > 0 {
+		response = append(response, CardCategory{
+			Title: "Cards You Have",
+			Cards: uniqueStrings(cardsYouHave), // Ensure uniqueness
+		})
+	}
+	if len(cardsYouNeed) > 0 {
+		response = append(response, CardCategory{
+			Title: "Cards You Need",
+			Cards: uniqueStrings(cardsYouNeed), // Ensure uniqueness
+		})
+	}
+	if len(cardsToCut) > 0 {
+		response = append(response, CardCategory{
+			Title: "Cards To Cut",
+			Cards: uniqueStrings(cardsToCut), // Ensure uniqueness
+		})
+	}
+
+	return response
 }
