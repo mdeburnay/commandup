@@ -36,9 +36,8 @@ type Container struct {
 }
 
 type ApiResponse struct {
-	Header      string    `json:"header"`
-	Description string    `json:"description"`
-	Container   Container `json:"container"`
+	Header    string    `json:"header"`
+	Container Container `json:"container"`
 }
 
 type Titles struct {
@@ -48,8 +47,8 @@ type Titles struct {
 }
 
 type CardCategory struct {
-	Title string   `json:"title"`
-	Cards []string `json:"cards"`
+	Title string     `json:"title"`
+	Cards []CardView `json:"cards"`
 }
 
 type CardListResponse []CardCategory
@@ -87,8 +86,6 @@ func GetCardUpgrades(c *gin.Context) {
 	}
 
 	apiUrl := generateApiUrl(&commanderPrecon.Precon, commanderPrecon.Commander)
-
-	log.Default().Println("Fetching API response from URL: ", apiUrl)
 
 	cardList, err := fetchApiResponse(apiUrl)
 
@@ -187,14 +184,14 @@ func fetchApiResponse(apiURL string) (ApiResponse, error) {
 	return apiResponse, nil
 }
 
-func uniqueStrings(input []string) []string {
+func uniqueCardViews(input []CardView) []CardView {
 	seen := make(map[string]bool)
-	var result []string
+	var result []CardView
 
-	for _, value := range input {
-		if _, ok := seen[value]; !ok {
-			seen[value] = true
-			result = append(result, value)
+	for _, card := range input {
+		if _, ok := seen[card.Name]; !ok {
+			seen[card.Name] = true
+			result = append(result, card)
 		}
 	}
 
@@ -218,12 +215,6 @@ func formatString(input string) string {
 
 func generateApiUrl(precon *string, commander string) string {
 	baseUrl := "https://json.edhrec.com/pages"
-	if precon != nil {
-		fmt.Println("Precon: ", *precon) // Dereferenced value of precon
-	} else {
-		fmt.Println("Precon is nil")
-	}
-	fmt.Println("Commander: ", commander)
 
 	if precon != nil && *precon != "" { // Check also if precon is not an empty string
 		formattedPreconName := formatString(*precon)
@@ -241,16 +232,16 @@ func formatCardListResponse(cardList ApiResponse, userCardCollection []string, p
 		return formatPreconCardListResponse(cardList, userCardCollection)
 	}
 
-	return formatCommanderCardListResponse(cardList, userCardCollection)
+	return formatPreconCardListResponse(cardList, userCardCollection)
 }
 
 func formatPreconCardListResponse(cardList ApiResponse, userCardCollection []string) CardListResponse {
 	var userCardMap map[string]bool
 
 	var response CardListResponse
-	var cardsToCut []string   // Accumulate all cards to cut here
-	var cardsYouHave []string // Accumulate all cards you have here
-	var cardsYouNeed []string // Accumulate all cards you need here
+	var cardsToCut []CardView   // Accumulate all cards to cut here
+	var cardsYouHave []CardView // Accumulate all cards you have here
+	var cardsYouNeed []CardView // Accumulate all cards you need here
 
 	userCardMap = make(map[string]bool)
 	for _, cardName := range userCardCollection {
@@ -264,16 +255,28 @@ func formatPreconCardListResponse(cardList ApiResponse, userCardCollection []str
 		// Process cards to cut separately to ensure they're always included
 		if tag == "cardstocut" || tag == "landstocut" {
 			for _, cardView := range cardViews {
-				cardsToCut = append(cardsToCut, cardView.Name)
+				cardsToCut = append(cardsToCut, CardView{
+					Name:      cardView.Name,
+					Synergy:   cardView.Synergy,
+					Inclusion: cardView.Inclusion,
+				})
 			}
 			continue
 		}
 
 		for _, cardView := range cardViews {
 			if _, exists := userCardMap[cardView.Name]; exists {
-				cardsYouHave = append(cardsYouHave, cardView.Name)
+				cardsYouHave = append(cardsYouHave, CardView{
+					Name:      cardView.Name,
+					Synergy:   cardView.Synergy,
+					Inclusion: cardView.Inclusion,
+				})
 			} else {
-				cardsYouNeed = append(cardsYouNeed, cardView.Name)
+				cardsYouNeed = append(cardsYouNeed, CardView{
+					Name:      cardView.Name,
+					Synergy:   cardView.Synergy,
+					Inclusion: cardView.Inclusion,
+				})
 			}
 		}
 	}
@@ -282,26 +285,26 @@ func formatPreconCardListResponse(cardList ApiResponse, userCardCollection []str
 	if len(cardsYouHave) > 0 {
 		response = append(response, CardCategory{
 			Title: "Cards You Have",
-			Cards: uniqueStrings(cardsYouHave), // Ensure uniqueness
+			Cards: uniqueCardViews(cardsYouHave), // Ensure uniqueness
 		})
 	}
 	if len(cardsYouNeed) > 0 {
 		response = append(response, CardCategory{
 			Title: "Cards You Need",
-			Cards: uniqueStrings(cardsYouNeed), // Ensure uniqueness
+			Cards: uniqueCardViews(cardsYouNeed), // Ensure uniqueness
 		})
 	}
 	if len(cardsToCut) > 0 {
 		response = append(response, CardCategory{
 			Title: "Cards To Cut",
-			Cards: uniqueStrings(cardsToCut), // Ensure uniqueness
+			Cards: uniqueCardViews(cardsToCut), // Ensure uniqueness
 		})
 	}
 
 	return response
 }
 
-func formatCommanderCardListResponse(cardList ApiResponse, userCardCollection []string) CardListResponse {
-	log.Default().Println("Formatting commander card list response")
-	return cardList
-}
+// func formatCommanderCardListResponse(cardList ApiResponse, userCardCollection []string) CardListResponse {
+// 	log.Default().Println("Formatting commander card list response")
+// 	return cardList
+// }

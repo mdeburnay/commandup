@@ -20,6 +20,7 @@ function CardUpgrades(): JSX.Element {
 
   const mutation = useMutation({
     mutationFn: async ({ data }: any) => {
+      console.log("Data in FE: " + data);
       return axios
         .post("http://localhost:8080/api/cards/upgrades", data, {
           headers: {
