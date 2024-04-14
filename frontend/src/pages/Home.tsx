@@ -28,7 +28,6 @@ function CardUpgrades(): JSX.Element {
           },
         })
         .then(({ data }) => {
-          console.log("Returned data in FE: " + data);
           return data;
         });
     },
