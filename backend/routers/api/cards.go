@@ -16,7 +16,9 @@ import (
 )
 
 type CardView struct {
-	Name string `json:"name"`
+	Name      string  `json:"name"`
+	Synergy   float32 `json:"synergy"`
+	Inclusion int     `json:"inclusion"`
 }
 
 type CardList struct {
@@ -111,8 +113,8 @@ func GetCardUpgrades(c *gin.Context) {
 		return
 	}
 
-	// Depending on whether the user specifies for a precon or not, the response will be different
-	cardListResponse := formatCardListResponse(cardList, userCardCollection)
+	// // Depending on whether the user specifies for a precon or not, the response will be different
+	cardListResponse := formatCardListResponse(cardList, userCardCollection, &commanderPrecon.Precon)
 
 	responseDataJSON, err := json.Marshal(cardListResponse)
 	if err != nil {
@@ -250,7 +252,15 @@ func generateApiUrl(precon *string, commander string) string {
 	return baseUrl + "/commanders/" + formattedCommanderName + ".json"
 }
 
-func formatCardListResponse(cardList ApiResponse, userCardCollection []string) CardListResponse {
+func formatCardListResponse(cardList ApiResponse, userCardCollection []string, precon *string) CardListResponse {
+	if precon != nil && *precon != "" {
+		return formatPreconCardListResponse(cardList, userCardCollection)
+	}
+
+	return formatCommanderCardListResponse(cardList, userCardCollection)
+}
+
+func formatPreconCardListResponse(cardList ApiResponse, userCardCollection []string) CardListResponse {
 	var userCardMap map[string]bool
 
 	var response CardListResponse
@@ -305,4 +315,9 @@ func formatCardListResponse(cardList ApiResponse, userCardCollection []string) C
 	}
 
 	return response
+}
+
+func formatCommanderCardListResponse(cardList ApiResponse, userCardCollection []string) CardListResponse {
+	log.Default().Println("Formatting commander card list response")
+	return cardList
 }
