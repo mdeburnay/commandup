@@ -6,6 +6,16 @@ import axios from "axios";
 // Component
 import { Button } from "../components/Button";
 
+interface ICard {
+  name: string;
+  synergy: number;
+  inclusion: number;
+}
+interface ICardCategory {
+  title: string;
+  cards: ICard[];
+}
+
 export const Home = () => {
   return (
     <>
@@ -39,8 +49,6 @@ function CardUpgrades(): JSX.Element {
       commander: commander,
       precon: deckName,
     };
-
-    console.log(payload);
 
     mutation.mutate({ data: payload });
   };
@@ -84,27 +92,24 @@ function CardUpgrades(): JSX.Element {
       </div>
       <div className="flex w-full flex-row justify-evenly">
         {mutation.data &&
-          mutation.data.map(
-            (
-              { title, cards }: { title: string; cards: string[] },
-              i: number
-            ) => {
-              return (
-                <div key={i}>
-                  <h2 className="py-4 text-xl">{title}</h2>
-                  <div>
-                    {cards.map((card: string, i: number) => {
+          mutation.data.map(({ title, cards }: ICardCategory, i: number) => {
+            return (
+              <div key={i}>
+                <h2 className="py-4 text-xl">{title}</h2>
+                <div>
+                  {cards.map(
+                    ({ name, synergy, inclusion }: ICard, i: number) => {
                       return (
                         <div key={i} style={{ fontSize: 14 }}>
-                          {card}
+                          {name} - Synergy: {synergy} - Inclusion:{inclusion}
                         </div>
                       );
-                    })}
-                  </div>
+                    }
+                  )}
                 </div>
-              );
-            }
-          )}
+              </div>
+            );
+          })}
       </div>
     </main>
   );
