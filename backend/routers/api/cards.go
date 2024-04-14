@@ -231,7 +231,7 @@ func formatString(input string) string {
 }
 
 func generateApiUrl(precon *string, commander string) string {
-	baseUrl := "https://json.edhrec.com/pages/commanders/"
+	baseUrl := "https://json.edhrec.com/pages"
 	if precon != nil {
 		fmt.Println("Precon: ", *precon) // Dereferenced value of precon
 	} else {
@@ -242,12 +242,12 @@ func generateApiUrl(precon *string, commander string) string {
 	if precon != nil && *precon != "" { // Check also if precon is not an empty string
 		formattedPreconName := formatString(*precon)
 		formattedCommanderName := formatString(commander)
-		return "https://json.edhrec.com/pages/precon/" + formattedPreconName + "/" + formattedCommanderName + ".json"
+		return baseUrl + "/precon/" + formattedPreconName + "/" + formattedCommanderName + ".json"
 	}
 
 	// If no precon is provided, only format the commander name.
 	formattedCommanderName := formatString(commander)
-	return baseUrl + formattedCommanderName + ".json"
+	return baseUrl + "/commanders/" + formattedCommanderName + ".json"
 }
 
 func formatCardListResponse(cardList ApiResponse, userCardCollection []string) CardListResponse {
