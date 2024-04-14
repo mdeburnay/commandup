@@ -52,22 +52,6 @@ type CardCategory struct {
 	Cards []string `json:"cards"`
 }
 
-type Card struct {
-	Count           int
-	TradelistCount  int
-	Name            string
-	Edition         string
-	Condition       string
-	Language        string
-	Foil            bool
-	Tags            string
-	LastModified    string
-	CollectorNumber string
-	Alter           bool
-	Proxy           bool
-	PurchasePrice   float64
-}
-
 type CardListResponse []CardCategory
 
 type CommanderPrecon struct {
