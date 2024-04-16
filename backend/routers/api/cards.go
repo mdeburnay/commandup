@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math"
 	"net/http"
 	"os"
 	"strings"
@@ -16,9 +17,9 @@ import (
 )
 
 type CardView struct {
-	Name      string  `json:"name"`
-	Synergy   float32 `json:"synergy"`
-	Inclusion int     `json:"inclusion"`
+	Name      string   `json:"name"`
+	Synergy   *float64 `json:"synergy, omitempty"`
+	Inclusion *int     `json:"inclusion, omitempty"`
 }
 
 type CardList struct {
@@ -256,9 +257,7 @@ func formatPreconCardListResponse(cardList ApiResponse, userCardCollection []str
 		if tag == "cardstocut" || tag == "landstocut" {
 			for _, cardView := range cardViews {
 				cardsToCut = append(cardsToCut, CardView{
-					Name:      cardView.Name,
-					Synergy:   cardView.Synergy,
-					Inclusion: cardView.Inclusion,
+					Name: cardView.Name,
 				})
 			}
 			continue
@@ -266,16 +265,22 @@ func formatPreconCardListResponse(cardList ApiResponse, userCardCollection []str
 
 		for _, cardView := range cardViews {
 			if _, exists := userCardMap[cardView.Name]; exists {
+				synergyValue := math.Round(*cardView.Synergy * 100)
+				inclusionValue := *cardView.Inclusion
+
 				cardsYouHave = append(cardsYouHave, CardView{
 					Name:      cardView.Name,
-					Synergy:   cardView.Synergy,
-					Inclusion: cardView.Inclusion,
+					Synergy:   &synergyValue,
+					Inclusion: &inclusionValue,
 				})
 			} else {
+				synergyValue := math.Round(*cardView.Synergy * 100)
+				inclusionValue := *cardView.Inclusion
+
 				cardsYouNeed = append(cardsYouNeed, CardView{
 					Name:      cardView.Name,
-					Synergy:   cardView.Synergy,
-					Inclusion: cardView.Inclusion,
+					Synergy:   &synergyValue,
+					Inclusion: &inclusionValue,
 				})
 			}
 		}

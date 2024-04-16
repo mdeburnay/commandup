@@ -101,7 +101,9 @@ function CardUpgrades(): JSX.Element {
                     ({ name, synergy, inclusion }: ICard, i: number) => {
                       return (
                         <div key={i} style={{ fontSize: 14 }}>
-                          {name} - Synergy: {synergy} - Inclusion:{inclusion}
+                          {name}
+                          {synergy ? `- Synergy: ${synergy}%` : ""}
+                          {inclusion ? ` - Inclusion: ${inclusion}` : ""}
                         </div>
                       );
                     }
