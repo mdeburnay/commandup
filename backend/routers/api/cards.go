@@ -117,8 +117,8 @@ func UploadCardCollection(c *gin.Context) {
 
 	log.Default().Println("Saving file")
 
-	tempFilePath := "temp_card_collection.csv"
-	err = c.SaveUploadedFile(file, tempFilePath)
+	cardCollectionFilePath := "temp_card_collection.csv"
+	err = c.SaveUploadedFile(file, cardCollectionFilePath)
 
 	log.Default().Println("File saved")
 	if err != nil {
@@ -128,16 +128,16 @@ func UploadCardCollection(c *gin.Context) {
 
 	log.Default().Println("Opening file")
 
-	f, err := os.Open(tempFilePath)
+	cardCollection, err := os.Open(cardCollectionFilePath)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to open the file"})
 		return
 	}
-	defer f.Close()
+	defer cardCollection.Close()
 
 	log.Default().Println("Reading file")
 
-	csvReader := csv.NewReader(f)
+	csvReader := csv.NewReader(cardCollection)
 
 	records, err := csvReader.ReadAll()
 	if err != nil {
