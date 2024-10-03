@@ -55,23 +55,26 @@ type CardCategory struct {
 type CardListResponse []CardCategory
 
 type CommanderPrecon struct {
-	Precon    string `json:"precon"`
 	Commander string `json:"commander"`
+	Precon    string `json:"precon"`
 }
 
 var userCardCollection []string
 
 func GetCardUpgrades(c *gin.Context) {
+	log.Default().Println("Getting user cards...")
 	rows, err := models.GetUserCards()
 
 	var commanderPrecon CommanderPrecon
 
 	if err := c.ShouldBindJSON(&commanderPrecon); err != nil {
+		log.Default().Println("Error binding JSON")
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	if err != nil {
+		log.Default().Print("Could not fetch cards from database")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not fetch cards from database"})
 		return
 	}
@@ -79,6 +82,7 @@ func GetCardUpgrades(c *gin.Context) {
 	for rows.Next() {
 		var name string
 		if err := rows.Scan(&name); err != nil {
+			log.Default().Panicln("Error scanning user card rows from database")
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning rows of users cards from database"})
 			return
 		}
@@ -88,14 +92,17 @@ func GetCardUpgrades(c *gin.Context) {
 
 	apiUrl := generateApiUrl(&commanderPrecon.Precon, commanderPrecon.Commander)
 
+	log.Default().Println("Search for precon", commanderPrecon.Precon, " and commander", commanderPrecon.Commander)
+
 	cardList, err := fetchApiResponse(apiUrl)
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
+		log.Default().Println("Search params did not match any results")
+		c.JSON(http.StatusNotFound, gin.H{"error": "Not Found"})
 		return
 	}
 
-	// // Depending on whether the user specifies for a precon or not, the response will be different
+	// Depending on whether the user specifies for a precon or not, the response will be different
 	cardListResponse := formatCardListResponse(cardList, userCardCollection, &commanderPrecon.Precon)
 
 	responseDataJSON, err := json.Marshal(cardListResponse)
@@ -159,6 +166,8 @@ func UploadCardCollection(c *gin.Context) {
 
 func fetchApiResponse(apiURL string) (ApiResponse, error) {
 	var apiResponse ApiResponse
+
+	log.Default().Println("Fetching API response")
 
 	response, err := http.Get(apiURL)
 	if err != nil {

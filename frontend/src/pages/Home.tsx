@@ -6,6 +6,9 @@ import axios from "axios";
 // Component
 import { Button } from "../components/Buttons/PrimaryButton";
 
+// Icons
+import { AiOutlineLoading3Quarters } from "react-icons/ai";
+
 interface ICard {
   name: string;
   synergy: number;
@@ -14,6 +17,11 @@ interface ICard {
 interface ICardCategory {
   title: string;
   cards: ICard[];
+}
+
+interface GetCardUpgradesReq {
+  commander: string;
+  precon?: string;
 }
 
 export const Home = () => {
@@ -27,12 +35,17 @@ export const Home = () => {
 function CardUpgrades(): JSX.Element {
   const [commander, setCommander] = useState("");
   const [deckName, setDeckName] = useState("");
+  const [error, setError] = useState("");
 
-  const mutation = useMutation({
-    mutationFn: async ({ data }: any) => {
-      console.log("Data in FE: " + data);
+  const {
+    mutate: fetchCardUpgrades,
+    isError,
+    isPending,
+    data,
+  } = useMutation({
+    mutationFn: async (payload: GetCardUpgradesReq) => {
       return axios
-        .post("http://localhost:8080/api/cards/upgrades", data, {
+        .post("http://localhost:8080/api/cards/upgrades", payload, {
           headers: {
             "Content-Type": "application/json",
           },
@@ -50,7 +63,7 @@ function CardUpgrades(): JSX.Element {
       precon: deckName,
     };
 
-    mutation.mutate({ data: payload });
+    fetchCardUpgrades(payload);
   };
 
   /**
@@ -63,8 +76,8 @@ function CardUpgrades(): JSX.Element {
 
   return (
     <main>
-      <div className="max-w-lg flex-row">
-        <form className="flex flex-row justify-center items-center bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+      <div className="max-w-lg flex-row bg-white shadow-md">
+        <form className="flex flex-row justify-center items-cente rounded px-8 pt-6 pb-8 mb-4">
           <div className="mx-5">
             <input
               className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
@@ -89,10 +102,14 @@ function CardUpgrades(): JSX.Element {
             onClick={handleSubmit}
           />
         </form>
+        <div className="flex justify-center">
+          {isPending && <AiOutlineLoading3Quarters className="animate-spin" />}
+          {isError && <div>Not found!</div>}
+        </div>
       </div>
       <div className="flex w-full flex-row justify-evenly">
-        {mutation.data &&
-          mutation.data.map(({ title, cards }: ICardCategory, i: number) => {
+        {data &&
+          data.map(({ title, cards }: ICardCategory, i: number) => {
             return (
               <div key={i}>
                 <h2 className="py-4 text-xl">{title}</h2>
