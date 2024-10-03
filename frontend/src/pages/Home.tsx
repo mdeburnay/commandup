@@ -51,7 +51,14 @@ function CardUpgrades(): JSX.Element {
           },
         })
         .then(({ data }) => {
+          console.log("Data: ", data);
           return data;
+        })
+        .catch(({ response }) => {
+          const errMessage = response.data.error;
+
+          console.log(errMessage);
+          setError(errMessage);
         });
     },
   });
@@ -104,7 +111,7 @@ function CardUpgrades(): JSX.Element {
         </form>
         <div className="flex justify-center">
           {isPending && <AiOutlineLoading3Quarters className="animate-spin" />}
-          {isError && <div>Not found!</div>}
+          {error && <div>{error}</div>}
         </div>
       </div>
       <div className="flex w-full flex-row justify-evenly">

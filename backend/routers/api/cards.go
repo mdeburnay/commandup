@@ -62,33 +62,9 @@ type CommanderPrecon struct {
 var userCardCollection []string
 
 func GetCardUpgrades(c *gin.Context) {
-	log.Default().Println("Getting user cards...")
-	rows, err := models.GetUserCards()
+	log.Default().Println("Request to fetch card upgrades - GetCardUpgrades")
 
 	var commanderPrecon CommanderPrecon
-
-	if err := c.ShouldBindJSON(&commanderPrecon); err != nil {
-		log.Default().Println("Error binding JSON")
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	if err != nil {
-		log.Default().Print("Could not fetch cards from database")
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not fetch cards from database"})
-		return
-	}
-
-	for rows.Next() {
-		var name string
-		if err := rows.Scan(&name); err != nil {
-			log.Default().Panicln("Error scanning user card rows from database")
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning rows of users cards from database"})
-			return
-		}
-
-		userCardCollection = append(userCardCollection, name)
-	}
 
 	apiUrl := generateApiUrl(&commanderPrecon.Precon, commanderPrecon.Commander)
 
@@ -109,6 +85,31 @@ func GetCardUpgrades(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
 		return
+	}
+
+	if err := c.ShouldBindJSON(&commanderPrecon); err != nil {
+		log.Default().Println("Error binding JSON")
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	rows, err := models.GetUserCards()
+
+	if err != nil {
+		log.Default().Print("Could not fetch cards from database")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not fetch cards from database"})
+		return
+	}
+
+	for rows.Next() {
+		var name string
+		if err := rows.Scan(&name); err != nil {
+			log.Default().Panicln("Error scanning user card rows from database")
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning rows of users cards from database"})
+			return
+		}
+
+		userCardCollection = append(userCardCollection, name)
 	}
 
 	c.Data(http.StatusOK, "application/json; charset=utf-8", responseDataJSON)
