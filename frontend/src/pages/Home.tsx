@@ -4,7 +4,7 @@ import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
 
 // Component
-import { Button } from "../components/Button";
+import { Button } from "../components/Buttons/PrimaryButton";
 
 interface ICard {
   name: string;

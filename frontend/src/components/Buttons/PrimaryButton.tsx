@@ -4,24 +4,26 @@ interface IButtonProps {
   text: string;
   onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
   url?: string;
-  styles?: string | IButtonStyles;
-}
-
-export enum IButtonStyles {
-  PRIMARY = "text-blue w-auto cursor-pointer rounded-lg border bg-white px-6 py-1 tracking-wide",
+  styles?: string;
 }
 
 export const Button = ({ text, onClick, url, styles }: IButtonProps) => {
   if (url) {
     return (
-      <Link to={url} className={styles || IButtonStyles.PRIMARY}>
+      <Link
+        to={url}
+        className={`text-blue w-auto cursor-pointer rounded-lg border bg-white px-6 py-1 tracking-wide ${styles}`}
+      >
         {text}
       </Link>
     );
   }
 
   return (
-    <button className={styles || IButtonStyles.PRIMARY} onClick={onClick}>
+    <button
+      className={`text-blue w-auto cursor-pointer rounded-lg border bg-white px-6 py-1 tracking-wide ${styles}`}
+      onClick={onClick}
+    >
       {text}
     </button>
   );

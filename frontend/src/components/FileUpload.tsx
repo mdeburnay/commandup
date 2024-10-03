@@ -4,7 +4,7 @@ import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
 
 // Components
-import { Button } from "./Button";
+import { Button } from "./Buttons/PrimaryButton";
 
 export function FileUpload(): JSX.Element {
   const fileInputRef = useRef<HTMLInputElement>(null);

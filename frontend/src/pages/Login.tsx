@@ -4,7 +4,7 @@ import axios from "axios";
 
 // Hooks
 import { useState } from "react";
-import { Button } from "../components/Button";
+import { Button } from "../components/Buttons/PrimaryButton";
 
 interface ILoginProps {
   email: string;

@@ -1,5 +1,5 @@
 // Components
-import { Button } from "./Button";
+import { Button } from "./Buttons/PrimaryButton";
 import { FileUpload } from "./FileUpload";
 
 export const Header = () => {
