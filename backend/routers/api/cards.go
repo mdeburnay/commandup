@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"math"
 	"net/http"
 	"os"
 	"strings"
@@ -17,9 +16,9 @@ import (
 )
 
 type CardView struct {
-	Name      string   `json:"name"`
-	Synergy   *float64 `json:"synergy, omitempty"`
-	Inclusion *int     `json:"inclusion, omitempty"`
+	Name      string `json:"name"`
+	Synergy   *float64 `json:"synergy,omitempty"`
+	Inclusion *int     `json:"inclusion,omitempty"`
 }
 
 type CardList struct {
@@ -54,8 +53,7 @@ type CardCategory struct {
 
 type CardListResponse []CardCategory
 
-type CommanderPrecon struct {
-	Commander string `json:"commander"`
+type Precon struct {
 	Precon    string `json:"precon"`
 }
 
@@ -64,35 +62,18 @@ var userCardCollection []string
 func GetCardUpgrades(c *gin.Context) {
 	log.Default().Println("Request to fetch card upgrades - GetCardUpgrades")
 
-	var commanderPrecon CommanderPrecon
+	var precon Precon
 
-	apiUrl := generateApiUrl(&commanderPrecon.Precon, commanderPrecon.Commander)
-
-	log.Default().Println("Search for precon", commanderPrecon.Precon, " and commander", commanderPrecon.Commander)
-
-	cardList, err := fetchApiResponse(apiUrl)
-
-	if err != nil {
-		log.Default().Println("Search params did not match any results")
-		c.JSON(http.StatusNotFound, gin.H{"error": "Not Found"})
+	if err := c.ShouldBindJSON(&precon); err != nil {
+		log.Default().Println("Precon not provided")
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Please provide a precon name."})
 		return
 	}
 
-	// Depending on whether the user specifies for a precon or not, the response will be different
-	cardListResponse := formatCardListResponse(cardList, userCardCollection, &commanderPrecon.Precon)
+	apiUrl := generateApiUrl(&precon.Precon)
 
-	responseDataJSON, err := json.Marshal(cardListResponse)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
-		return
-	}
-
-	if err := c.ShouldBindJSON(&commanderPrecon); err != nil {
-		log.Default().Println("Error binding JSON")
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
+	// Fetch user cards first, before formatting the response
+	userCardCollection = []string{} // Reset the collection
 	rows, err := models.GetUserCards()
 
 	if err != nil {
@@ -110,6 +91,22 @@ func GetCardUpgrades(c *gin.Context) {
 		}
 
 		userCardCollection = append(userCardCollection, name)
+	}
+
+	cardList, err := fetchApiResponse(apiUrl)
+
+	if err != nil {
+		log.Default().Println("Precon not found")
+		c.JSON(http.StatusNotFound, gin.H{"error": "Precon not found. Please check the precon name and try again."})
+		return
+	}
+
+	cardListResponse := formatCardListResponse(cardList, userCardCollection, &precon.Precon)
+
+	responseDataJSON, err := json.Marshal(cardListResponse)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
+		return
 	}
 
 	c.Data(http.StatusOK, "application/json; charset=utf-8", responseDataJSON)
@@ -224,18 +221,15 @@ func formatString(input string) string {
 	return sanitiseStr
 }
 
-func generateApiUrl(precon *string, commander string) string {
+func generateApiUrl(precon *string) string {
 	baseUrl := "https://json.edhrec.com/pages"
 
-	if precon != nil && *precon != "" { // Check also if precon is not an empty string
-		formattedPreconName := formatString(*precon)
-		formattedCommanderName := formatString(commander)
-		return baseUrl + "/precon/" + formattedPreconName + "/" + formattedCommanderName + ".json"
+	if precon == nil || *precon == "" {
+		return ""
 	}
 
-	// If no precon is provided, only format the commander name.
-	formattedCommanderName := formatString(commander)
-	return baseUrl + "/commanders/" + formattedCommanderName + ".json"
+	formattedPreconName := formatString(*precon)
+	return baseUrl + "/precon/" + formattedPreconName + ".json"
 }
 
 func formatCardListResponse(cardList ApiResponse, userCardCollection []string, precon *string) CardListResponse {
@@ -273,23 +267,23 @@ func formatPreconCardListResponse(cardList ApiResponse, userCardCollection []str
 			continue
 		}
 
+		// Process cards to add (cardstoadd, landstoadd)
 		for _, cardView := range cardViews {
-			if _, exists := userCardMap[cardView.Name]; exists {
-				synergyValue := math.Round(*cardView.Synergy * 100)
-				inclusionValue := *cardView.Inclusion
+			// Only process cards that have inclusion data
+			if cardView.Inclusion == nil {
+				continue
+			}
 
+			inclusionValue := *cardView.Inclusion
+
+			if _, exists := userCardMap[cardView.Name]; exists {
 				cardsYouHave = append(cardsYouHave, CardView{
 					Name:      cardView.Name,
-					Synergy:   &synergyValue,
 					Inclusion: &inclusionValue,
 				})
 			} else {
-				synergyValue := math.Round(*cardView.Synergy * 100)
-				inclusionValue := *cardView.Inclusion
-
 				cardsYouNeed = append(cardsYouNeed, CardView{
 					Name:      cardView.Name,
-					Synergy:   &synergyValue,
 					Inclusion: &inclusionValue,
 				})
 			}
@@ -318,8 +312,3 @@ func formatPreconCardListResponse(cardList ApiResponse, userCardCollection []str
 
 	return response
 }
-
-// func formatCommanderCardListResponse(cardList ApiResponse, userCardCollection []string) CardListResponse {
-// 	log.Default().Println("Formatting commander card list response")
-// 	return cardList
-// }

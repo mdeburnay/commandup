@@ -14,7 +14,7 @@ func init() {
 
 func main() {
 	routersInit := routers.InitRouter()
-	port := "localhost:8080"
+	port := ":8080"
 
 	server := &http.Server{
 		Addr:    port,
