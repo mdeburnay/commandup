@@ -7,8 +7,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/joho/godotenv"
-
 	_ "github.com/jackc/pgconn"
 	_ "github.com/jackc/pgx/v5"
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -19,11 +17,6 @@ var counts int64
 var db *sql.DB
 
 func Init() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Panic("Error loading .env file")
-	}
-
 	db = connectToDB()
 	if db == nil {
 		log.Panic("Database not connecting. Exiting.")
@@ -32,7 +25,7 @@ func Init() {
 }
 
 func CloseDB() {
-	defer db.Close()
+	db.Close()
 }
 
 func openDB(dsn string) (*sql.DB, error) {

@@ -5,3 +5,34 @@
 
 # Air config
 /backend/tmp
+
+# Compiled binaries
+backend_binary
+**/backend_binary
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Go build artifacts
+*.test
+*.out
+*.prof
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Frontend (if applicable)
+node_modules/
+dist/
+build/
+*.log
