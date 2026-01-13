@@ -7,6 +7,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/joho/godotenv"
+
 	_ "github.com/jackc/pgconn"
 	_ "github.com/jackc/pgx/v5"
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -17,6 +19,11 @@ var counts int64
 var db *sql.DB
 
 func Init() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Println("No .env file found, using environment variables")
+	}
+	
 	db = connectToDB()
 	if db == nil {
 		log.Panic("Database not connecting. Exiting.")
