@@ -6,13 +6,10 @@ import axios from "axios";
 // Component
 import { Button } from "../components/Buttons/PrimaryButton";
 
-// Icons
-import { AiOutlineLoading3Quarters } from "react-icons/ai";
-
 interface ICard {
 	name: string;
-	synergy: number;
-	inclusion: number;
+	synergy?: number;
+	inclusion?: number;
 }
 interface ICardCategory {
 	title: string;
@@ -20,8 +17,7 @@ interface ICardCategory {
 }
 
 interface GetCardUpgradesReq {
-	commander: string;
-	precon?: string;
+	precon: string;
 }
 
 export const Home = () => {
@@ -33,7 +29,6 @@ export const Home = () => {
 };
 
 function CardUpgrades(): JSX.Element {
-	const [commander, setCommander] = useState("");
 	const [deckName, setDeckName] = useState("");
 	const [error, setError] = useState("");
 
@@ -66,7 +61,6 @@ function CardUpgrades(): JSX.Element {
 	const handleSubmit = (e: any) => {
 		e.preventDefault();
 		const payload = {
-			commander: commander,
 			precon: deckName,
 		};
 
@@ -85,15 +79,6 @@ function CardUpgrades(): JSX.Element {
 		<main>
 			<div className="max-w-lg flex-row bg-white shadow-md">
 				<form className="flex flex-row justify-center items-cente rounded px-8 pt-6 pb-8 mb-4">
-					<div className="mx-5">
-						<input
-							className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-							id="commander"
-							type="text"
-							onChange={(e) => setCommander(e.target.value)}
-							placeholder="e.g Kardur, Doomscourge"
-						/>
-					</div>
 					<div className="mx-5">
 						<input
 							className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"

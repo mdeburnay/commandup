@@ -17,3 +17,9 @@ build:
 	@echo "Building backend binary..."
 	cd ./backend && env GOOS=linux CGO_ENABLED=0 go build -o ${BACKEND_BINARY} .
 	@echo "Done!"
+
+start:
+	@echo "Starting Commandup..."
+	cd ./frontend && pnpm start &
+	cd ./backend && air
+	@echo "Done!"
