@@ -1,9 +1,5 @@
 package models
 
-import (
-	"time"
-)
-
 type User struct {
 	ID        int
 	Email     string
@@ -19,6 +15,6 @@ func GetUser(email string) (user User, err error) {
 }
 
 func CreateUser(email string, password string, username string) (err error) {
-	_, err = db.Exec("INSERT INTO users (email, password, username, created_at, updated_at) VALUES ($1, $2, $3, $4, $5)", email, password, username, time.Now(), time.Now())
+	_, err = db.Exec("INSERT INTO users (email, password, username) VALUES ($1, $2, $3)", email, password, username)
 	return err
 }
