@@ -269,7 +269,7 @@ func formatPreconCardListResponse(cardList ApiResponse, userCardCollection []str
 
 		// Process cards to add (cardstoadd, landstoadd)
 		for _, cardView := range cardViews {
-			// Only process cards that have inclusion data
+			// only process cards that have inclusion data
 			if cardView.Inclusion == nil {
 				continue
 			}
