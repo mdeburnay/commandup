@@ -32,7 +32,18 @@ export const Login = () => {
     onError: (error) => {
       setError(error.message);
     },
-    onSuccess: () => {
+    onSuccess: (response) => {
+      // Store tokens and user info in localStorage
+      const { access_token, refresh_token, user } = response.data;
+      if (access_token) {
+        localStorage.setItem("accessToken", access_token);
+        if (refresh_token) {
+          localStorage.setItem("refreshToken", refresh_token);
+        }
+        if (user) {
+          localStorage.setItem("user", JSON.stringify(user));
+        }
+      }
       setSuccess(true);
       setError("");
     },

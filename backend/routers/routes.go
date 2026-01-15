@@ -1,6 +1,7 @@
 package routers
 
 import (
+	"commandup/middleware"
 	routers "commandup/routers/api"
 	"net/http"
 	"path/filepath"
@@ -23,6 +24,7 @@ func InitRouter() *gin.Engine {
 	}))
 
 	api := r.Group("/api/")
+	api.Use(middleware.AuthMiddleware())
 	{
 		api.GET("/", func(c *gin.Context) {
 			c.JSON(200, gin.H{
@@ -40,9 +42,10 @@ func InitRouter() *gin.Engine {
 		api.POST("auth/login", routers.Login)
 		api.POST("auth/signup", routers.Signup)
 
-		// Card routes
+		// Card routes - upgrades doesn't require auth, but middleware sets context
 		api.POST("cards/upgrades", routers.GetCardUpgrades)
-		api.POST("cards/upload-card-collection", routers.UploadCardCollection)
+		// Upload requires authentication
+		api.POST("cards/upload-card-collection", middleware.RequireAuth(), routers.UploadCardCollection)
 
 		// User routes
 		api.GET("user/:id", routers.GetUser(nil))

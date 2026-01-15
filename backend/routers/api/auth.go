@@ -28,7 +28,7 @@ func Login(c *gin.Context) {
 
 	if err != nil {
 		if err == sql.ErrNoRows {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
 		} else {
 			log.Printf("Database error: %v", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
@@ -37,11 +37,35 @@ func Login(c *gin.Context) {
 	}
 
 	if err := utils.CheckPassword(loginReq.Password, user.Password); err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid password"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Login successful", "userId": user.ID})
+	// Generate tokens
+	accessToken, err := utils.GenerateAccessToken(user.ID, user.Email, user.Username)
+	if err != nil {
+		log.Printf("Error generating access token: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error generating token"})
+		return
+	}
+
+	refreshToken, err := utils.GenerateRefreshToken(user.ID)
+	if err != nil {
+		log.Printf("Error generating refresh token: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error generating token"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Login successful",
+		"access_token": accessToken,
+		"refresh_token": refreshToken,
+		"user": gin.H{
+			"id": user.ID,
+			"email": user.Email,
+			"username": user.Username,
+		},
+	})
 }
 
 func Signup(c *gin.Context) {

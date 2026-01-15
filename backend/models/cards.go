@@ -2,6 +2,7 @@ package models
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"strconv"
 )
@@ -46,35 +47,33 @@ type ApiResponse struct {
 	Container   Container `json:"container"`
 }
 
-func GetUserCards() (rows *sql.Rows, err error) {
-	rows, err = db.Query("SELECT name FROM cards")
+func GetUserCards(userID int) (rows *sql.Rows, err error) {
+	rows, err = db.Query(`
+		SELECT c.name 
+		FROM user_cards uc
+		INNER JOIN cards c ON uc.card_id = c.id
+		WHERE uc.user_id = $1
+	`, userID)
 	if err != nil {
 		log.Printf("Database error: %v", err)
+		return nil, err
 	}
 	return rows, err
 }
 
-func UploadUserCards(records [][]string) error {
-	for _, record := range records[1:] {
-		var exists bool
-		foilBool := record[6] == "foil"
-
-		err := db.QueryRow(`
-        SELECT EXISTS(
-            SELECT 1 FROM cards 
-            WHERE name = $1 AND edition = $2 AND foil = $3
-        )`, record[2], record[3], foilBool).Scan(&exists) // Use foilBool, which is now correctly a boolean
-
-		if err != nil {
-			log.Printf("Error checking if record exists: %v", err)
+func UploadUserCards(userID int, records [][]string) error {
+	successCount := 0
+	errorCount := 0
+	
+	log.Printf("Starting upload for user_id: %d, total records: %d", userID, len(records)-1)
+	
+	for i, record := range records[1:] {
+		if len(record) < 13 {
+			log.Printf("Skipping record %d: insufficient columns (%d)", i+1, len(record))
+			errorCount++
 			continue
 		}
-
-		if exists {
-			log.Printf("Record already exists: %v", record)
-			continue
-		}
-
+		
 		var card Card
 		card.Count, _ = strconv.Atoi(record[0])
 		card.TradelistCount, _ = strconv.Atoi(record[1])
@@ -89,14 +88,84 @@ func UploadUserCards(records [][]string) error {
 		card.Proxy = record[11] == "Yes"
 		card.PurchasePrice, _ = strconv.ParseFloat(record[12], 64)
 
-		_, err = db.Exec("INSERT INTO cards (name, edition, condition, language, foil, tags, collector_number, alter, proxy, purchase_price) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)", card.Name, card.Edition, card.Condition, card.Language, card.Foil, card.Tags, card.CollectorNumber, card.Alter, card.Proxy, card.PurchasePrice)
+		// check if card exists in cards table
+		var cardID int
+		err := db.QueryRow(`
+			SELECT id FROM cards 
+			WHERE name = $1 AND edition = $2 AND foil = $3
+		`, card.Name, card.Edition, card.Foil).Scan(&cardID)
+
 		if err != nil {
-			if err != nil {
-				log.Printf("Error inserting record: %v", err)
+			if err == sql.ErrNoRows {
+				// create card if it doesn't exist
+				err = db.QueryRow(`
+					INSERT INTO cards (name, edition, condition, language, foil, tags, collector_number, alter, proxy)
+					VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+					RETURNING id
+				`, card.Name, card.Edition, card.Condition, card.Language, card.Foil, card.Tags, card.CollectorNumber, card.Alter, card.Proxy).Scan(&cardID)
+
+				if err != nil {
+					log.Printf("Error creating card '%s' (%s, foil=%v): %v", card.Name, card.Edition, card.Foil, err)
+					errorCount++
+					continue
+				}
+				log.Printf("Created new card: %s (id=%d)", card.Name, cardID)
+			} else {
+				log.Printf("Error checking if card exists '%s': %v", card.Name, err)
+				errorCount++
 				continue
 			}
 		}
+
+		// Check if user already has this card
+		var userCardExists bool
+		err = db.QueryRow(`
+			SELECT EXISTS(
+				SELECT 1 FROM user_cards 
+				WHERE user_id = $1 AND card_id = $2
+			)
+		`, userID, cardID).Scan(&userCardExists)
+
+		if err != nil {
+			log.Printf("Error checking if user has card (user_id=%d, card_id=%d): %v", userID, cardID, err)
+			errorCount++
+			continue
+		}
+
+
+		if userCardExists {
+			// update existing user_card entry
+			_, err = db.Exec(`
+				UPDATE user_cards 
+				SET count = $1, tradelist_count = $2, purchase_price = $3, updated_at = CURRENT_TIMESTAMP
+				WHERE user_id = $4 AND card_id = $5
+			`, card.Count, card.TradelistCount, card.PurchasePrice, userID, cardID)
+			if err != nil {
+				log.Printf("Error updating user_card (user_id=%d, card_id=%d): %v", userID, cardID, err)
+				errorCount++
+				continue
+			}
+			successCount++
+		} else {
+			// create new user_card entry
+			_, err = db.Exec(`
+				INSERT INTO user_cards (user_id, card_id, count, tradelist_count, purchase_price)
+				VALUES ($1, $2, $3, $4, $5)
+			`, userID, cardID, card.Count, card.TradelistCount, card.PurchasePrice)
+			if err != nil {
+				log.Printf("Error inserting user_card (user_id=%d, card_id=%d): %v", userID, cardID, err)
+				errorCount++
+				continue
+			}
+			successCount++
+		}
 	}
 
+	log.Printf("Upload complete: %d successful, %d errors", successCount, errorCount)
+	
+	if errorCount > 0 && successCount == 0 {
+		return fmt.Errorf("all %d records failed to upload", errorCount)
+	}
+	
 	return nil
 }

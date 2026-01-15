@@ -1,6 +1,7 @@
 package routers
 
 import (
+	"commandup/middleware"
 	"commandup/models"
 	"encoding/csv"
 	"encoding/json"
@@ -57,8 +58,6 @@ type Precon struct {
 	Precon    string `json:"precon"`
 }
 
-var userCardCollection []string
-
 func GetCardUpgrades(c *gin.Context) {
 	log.Default().Println("Request to fetch card upgrades - GetCardUpgrades")
 
@@ -72,25 +71,29 @@ func GetCardUpgrades(c *gin.Context) {
 
 	apiUrl := generateApiUrl(&precon.Precon)
 
-	// Fetch user cards first, before formatting the response
-	userCardCollection = []string{} // Reset the collection
-	rows, err := models.GetUserCards()
+	// fetch user cards if authenticated
+	var userCardCollection []string = []string{}
+	isAuthenticated := false
 
-	if err != nil {
-		log.Default().Print("Could not fetch cards from database")
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not fetch cards from database"})
-		return
-	}
+	if userID, ok := middleware.GetUserID(c); ok {
+		isAuthenticated = true
+		rows, err := models.GetUserCards(userID)
 
-	for rows.Next() {
-		var name string
-		if err := rows.Scan(&name); err != nil {
-			log.Default().Panicln("Error scanning user card rows from database")
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning rows of users cards from database"})
-			return
+		log.Default().Println("User ID: ", userID)
+
+		if err != nil {
+			log.Printf("Could not fetch cards from database: %v", err)
+		} else {
+			for rows.Next() {
+				var name string
+				if err := rows.Scan(&name); err != nil {
+					log.Printf("Error scanning user card rows: %v", err)
+					continue
+				}
+				userCardCollection = append(userCardCollection, name)
+			}
+			rows.Close()
 		}
-
-		userCardCollection = append(userCardCollection, name)
 	}
 
 	cardList, err := fetchApiResponse(apiUrl)
@@ -101,7 +104,7 @@ func GetCardUpgrades(c *gin.Context) {
 		return
 	}
 
-	cardListResponse := formatCardListResponse(cardList, userCardCollection, &precon.Precon)
+	cardListResponse := formatCardListResponse(cardList, userCardCollection, &precon.Precon, isAuthenticated)
 
 	responseDataJSON, err := json.Marshal(cardListResponse)
 	if err != nil {
@@ -152,7 +155,16 @@ func UploadCardCollection(c *gin.Context) {
 
 	log.Default().Println("Inserting records")
 
-	err = models.UploadUserCards(records)
+	// Get user ID from context (RequireAuth middleware should have already checked this)
+	userID, exists := middleware.GetUserID(c)
+	if !exists {
+		log.Printf("ERROR: Upload attempted without authentication")
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Authentication required"})
+		return
+	}
+
+	log.Printf("Uploading cards for user_id: %d", userID)
+	err = models.UploadUserCards(userID, records)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to insert records into the database"})
@@ -232,15 +244,15 @@ func generateApiUrl(precon *string) string {
 	return baseUrl + "/precon/" + formattedPreconName + ".json"
 }
 
-func formatCardListResponse(cardList ApiResponse, userCardCollection []string, precon *string) CardListResponse {
+func formatCardListResponse(cardList ApiResponse, userCardCollection []string, precon *string, isAuthenticated bool) CardListResponse {
 	if precon != nil && *precon != "" {
-		return formatPreconCardListResponse(cardList, userCardCollection)
+		return formatPreconCardListResponse(cardList, userCardCollection, isAuthenticated)
 	}
 
-	return formatPreconCardListResponse(cardList, userCardCollection)
+	return formatPreconCardListResponse(cardList, userCardCollection, isAuthenticated)
 }
 
-func formatPreconCardListResponse(cardList ApiResponse, userCardCollection []string) CardListResponse {
+func formatPreconCardListResponse(cardList ApiResponse, userCardCollection []string, isAuthenticated bool) CardListResponse {
 	var userCardMap map[string]bool
 
 	var response CardListResponse
@@ -291,7 +303,8 @@ func formatPreconCardListResponse(cardList ApiResponse, userCardCollection []str
 	}
 
 	// After processing all card lists, create the categories
-	if len(cardsYouHave) > 0 {
+	// Only show "Cards You Have" if user is authenticated
+	if isAuthenticated && len(cardsYouHave) > 0 {
 		response = append(response, CardCategory{
 			Title: "Cards You Have",
 			Cards: uniqueCardViews(cardsYouHave), // Ensure uniqueness

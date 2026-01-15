@@ -39,11 +39,21 @@ function CardUpgrades(): JSX.Element {
 		data,
 	} = useMutation({
 		mutationFn: async (payload: GetCardUpgradesReq) => {
+			// Get token from localStorage
+			const accessToken = localStorage.getItem("accessToken");
+			
+			const headers: Record<string, string> = {
+				"Content-Type": "application/json",
+			};
+
+			// Add Authorization header if token exists
+			if (accessToken) {
+				headers["Authorization"] = `Bearer ${accessToken}`;
+			}
+
 			return axios
 				.post("http://localhost:8080/api/cards/upgrades", payload, {
-					headers: {
-						"Content-Type": "application/json",
-					},
+					headers,
 				})
 				.then(({ data }) => {
 					console.log("Data: ", data);

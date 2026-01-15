@@ -1,10 +1,25 @@
 BACKEND_BINARY=backend_binary
 
-## UP: Starts all containers in the background without forcing build
-up:
-	@echo "Starting Docker images..."
-	podman compose up -d
-	@echo "Docker images started!"
+## START: Starts the frontend and backend
+start:
+	@echo "Starting Commandup..."
+	podman compose up -d postgres &
+	cd ./frontend && pnpm start &
+	cd ./backend && air &
+	@echo "Done!"
+
+## START_DB: Start database container only
+start_database:
+	@echo "Starting database..."
+	podman compose up -d postgres
+	@echo "Database started!"
+
+## STOP_DB: Stop database container only
+stop_database:
+	@echo "Stopping database..."
+	podman compose stop postgres
+	@echo "Database stopped!"
+
 
 ## DOWN: Stop docker containers
 down:
@@ -16,10 +31,4 @@ down:
 build:
 	@echo "Building backend binary..."
 	cd ./backend && env GOOS=linux CGO_ENABLED=0 go build -o ${BACKEND_BINARY} .
-	@echo "Done!"
-
-start:
-	@echo "Starting Commandup..."
-	cd ./frontend && pnpm start &
-	cd ./backend && air
 	@echo "Done!"
