@@ -41,7 +41,7 @@ function CardUpgrades(): JSX.Element {
 		mutationFn: async (payload: GetCardUpgradesReq) => {
 			// Get token from localStorage
 			const accessToken = localStorage.getItem("accessToken");
-			
+
 			const headers: Record<string, string> = {
 				"Content-Type": "application/json",
 			};

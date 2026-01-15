@@ -7,84 +7,84 @@ import { useState } from "react";
 import { Button } from "../components/Buttons/PrimaryButton";
 
 interface ILoginProps {
-  email: string;
-  password: string;
+	email: string;
+	password: string;
 }
 
 export const Login = () => {
-  const [email, setEmail] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
-  const [error, setError] = useState<string>("");
-  const [success, setSuccess] = useState<boolean>(false);
+	const [email, setEmail] = useState<string>("");
+	const [password, setPassword] = useState<string>("");
+	const [error, setError] = useState<string>("");
+	const [success, setSuccess] = useState<boolean>(false);
 
-  const mutation = useMutation({
-    mutationFn: async ({ email, password }: ILoginProps) => {
-      return axios.post(
-        "http://localhost:8080/api/auth/login",
-        { email, password },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-    },
-    onError: (error) => {
-      setError(error.message);
-    },
-    onSuccess: (response) => {
-      // Store tokens and user info in localStorage
-      const { access_token, refresh_token, user } = response.data;
-      if (access_token) {
-        localStorage.setItem("accessToken", access_token);
-        if (refresh_token) {
-          localStorage.setItem("refreshToken", refresh_token);
-        }
-        if (user) {
-          localStorage.setItem("user", JSON.stringify(user));
-        }
-      }
-      setSuccess(true);
-      setError("");
-    },
-  });
+	const mutation = useMutation({
+		mutationFn: async ({ email, password }: ILoginProps) => {
+			return axios.post(
+				"http://localhost:8080/api/auth/login",
+				{ email, password },
+				{
+					headers: {
+						"Content-Type": "application/json",
+					},
+				}
+			);
+		},
+		onError: (error) => {
+			setError(error.message);
+		},
+		onSuccess: (response) => {
+			// Store tokens and user info in localStorage
+			const { access_token, refresh_token, user } = response.data;
+			if (access_token) {
+				localStorage.setItem("accessToken", access_token);
+				if (refresh_token) {
+					localStorage.setItem("refreshToken", refresh_token);
+				}
+				if (user) {
+					localStorage.setItem("user", JSON.stringify(user));
+				}
+			}
+			setSuccess(true);
+			setError("");
+		},
+	});
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    mutation.mutate({ email, password });
-  };
+	const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+		e.preventDefault();
+		mutation.mutate({ email, password });
+	};
 
-  return (
-    <>
-      <form
-        className="flex justify-center items-center flex-col"
-        onSubmit={handleSubmit}
-      >
-        <input
-          className="flex w-80 p-1 rounded-md m-2"
-          type="text"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-        <input
-          className="flex w-80 p-1 rounded-md m-2"
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        <button
-          type="submit"
-          className="flex p-1 rounded-md m-2 hover:cursor-pointer"
-        >
-          Login
-        </button>
-        {error && <div className="text-red-500">{error}</div>}
-        {success && <div>Login Successful!</div>}
-        <div className="p-4">Don't have an account? </div>
-        <Button text="Sign Up" url="/signup" />
-      </form>
-    </>
-  );
+	return (
+		<>
+			<form
+				className="flex justify-center items-center flex-col"
+				onSubmit={handleSubmit}
+			>
+				<input
+					className="flex w-80 p-1 rounded-md m-2"
+					type="text"
+					placeholder="Email"
+					value={email}
+					onChange={(e) => setEmail(e.target.value)}
+				/>
+				<input
+					className="flex w-80 p-1 rounded-md m-2"
+					type="password"
+					placeholder="Password"
+					value={password}
+					onChange={(e) => setPassword(e.target.value)}
+				/>
+				<button
+					type="submit"
+					className="flex p-1 rounded-md m-2 hover:cursor-pointer"
+				>
+					Login
+				</button>
+				{error && <div className="text-red-500">{error}</div>}
+				{success && <div>Login Successful!</div>}
+				<div className="p-4">Don't have an account? </div>
+				<Button text="Sign Up" url="/signup" />
+			</form>
+		</>
+	);
 };

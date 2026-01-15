@@ -7,63 +7,63 @@ import axios from "axios";
 import { Button } from "./Buttons/PrimaryButton";
 
 export function FileUpload(): JSX.Element {
-  const fileInputRef = useRef<HTMLInputElement>(null);
+	const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const mutation = useMutation({
-    mutationFn: async (file: File) => {
-      const formData = new FormData();
-      formData.append("file", file);
+	const mutation = useMutation({
+		mutationFn: async (file: File) => {
+			const formData = new FormData();
+			formData.append("file", file);
 
-      // Get token from localStorage
-      const accessToken = localStorage.getItem("accessToken");
-      
-      const headers: Record<string, string> = {
-        "Content-Type": "multipart/form-data",
-      };
+			// Get token from localStorage
+			const accessToken = localStorage.getItem("accessToken");
 
-      // Add Authorization header if token exists
-      if (accessToken) {
-        headers["Authorization"] = `Bearer ${accessToken}`;
-      }
+			const headers: Record<string, string> = {
+				"Content-Type": "multipart/form-data",
+			};
 
-      return axios.post(
-        "http://localhost:8080/api/cards/upload-card-collection",
-        formData,
-        { headers }
-      );
-    },
-  });
+			// Add Authorization header if token exists
+			if (accessToken) {
+				headers["Authorization"] = `Bearer ${accessToken}`;
+			}
 
-  const handleButtonClick = () => {
-    fileInputRef.current?.click();
-  };
+			return axios.post(
+				"http://localhost:8080/api/cards/upload-card-collection",
+				formData,
+				{ headers }
+			);
+		},
+	});
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files) {
-      const file = event.target.files[0];
-      mutation.mutate(file);
-    }
-  };
+	const handleButtonClick = () => {
+		fileInputRef.current?.click();
+	};
 
-  return (
-    <>
-      <Button text="Upload Collection" onClick={handleButtonClick} />
-      <input
-        type="file"
-        className="hidden"
-        onChange={handleFileChange}
-        ref={fileInputRef}
-      />
-      {mutation.isPending && <div>Uploading...</div>}
-      {mutation.isError && (
-        <div>
-          An error occurred:{" "}
-          {mutation.error instanceof Error
-            ? mutation.error.message
-            : "Unknown error"}
-        </div>
-      )}
-      {mutation.isSuccess && <div>File uploaded successfully!</div>}
-    </>
-  );
+	const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+		if (event.target.files) {
+			const file = event.target.files[0];
+			mutation.mutate(file);
+		}
+	};
+
+	return (
+		<>
+			<Button text="Upload Collection" onClick={handleButtonClick} />
+			<input
+				type="file"
+				className="hidden"
+				onChange={handleFileChange}
+				ref={fileInputRef}
+			/>
+			{mutation.isPending && <div>Uploading...</div>}
+			{mutation.isError && (
+				<div>
+					An error occurred:{" "}
+					{mutation.error instanceof Error
+						? mutation.error.message
+						: "Unknown error"}
+				</div>
+			)}
+			{mutation.isSuccess && <div>File uploaded successfully!</div>}
+		</>
+	);
 }
