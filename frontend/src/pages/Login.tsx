@@ -1,6 +1,7 @@
 // Packages
 import { useState } from "react";
 import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
 
 // Redux
 import { useLoginMutation } from "../redux/api/apiSlice";
@@ -13,9 +14,9 @@ export const Login = () => {
 	const [email, setEmail] = useState<string>("");
 	const [password, setPassword] = useState<string>("");
 	const [error, setError] = useState<string>("");
-	const [success, setSuccess] = useState<boolean>(false);
 
 	const dispatch = useDispatch();
+	const navigate = useNavigate();
 	const [login, { isLoading }] = useLoginMutation();
 
 	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -29,8 +30,8 @@ export const Login = () => {
 					refreshToken: userData.refresh_token,
 				})
 			);
-			setSuccess(true);
 			setError("");
+			navigate("/");
 		} catch (err: any) {
 			setError(err?.data?.message || err.error || "Login failed");
 		}
@@ -64,7 +65,6 @@ export const Login = () => {
 					{isLoading ? "Logging in..." : "Login"}
 				</button>
 				{error && <div className="text-red-500">{error}</div>}
-				{success && <div>Login Successful!</div>}
 				<div className="p-4">Don't have an account? </div>
 				<Button text="Sign Up" url="/signup" />
 			</form>

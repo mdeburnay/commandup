@@ -1,5 +1,6 @@
 // Packages
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useSignupMutation } from "../redux/api/apiSlice";
 
 export const Signup = () => {
@@ -7,16 +8,16 @@ export const Signup = () => {
 	const [password, setPassword] = useState<string>("");
 	const [username, setUsername] = useState<string>("");
 	const [error, setError] = useState<string>("");
-	const [success, setSuccess] = useState<boolean>(false);
 
+	const navigate = useNavigate();
 	const [signup, { isLoading }] = useSignupMutation();
 
 	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
 		try {
 			await signup({ email, password, username }).unwrap();
-			setSuccess(true);
 			setError("");
+			navigate("/login");
 		} catch (err: any) {
 			setError(err?.data?.message || err.error || "Signup failed");
 		}
@@ -57,7 +58,6 @@ export const Signup = () => {
 					{isLoading ? "Signing up..." : "Signup"}
 				</button>
 				{error && <div className="text-red-500">{error}</div>}
-				{success && <div>Signup Successful!</div>}
 			</form>
 		</>
 	);
