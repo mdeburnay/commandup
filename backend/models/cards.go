@@ -64,108 +64,95 @@ func GetUserCards(userID int) (rows *sql.Rows, err error) {
 func UploadUserCards(userID int, records [][]string) error {
 	successCount := 0
 	errorCount := 0
-	
+
 	log.Printf("Starting upload for user_id: %d, total records: %d", userID, len(records)-1)
-	
+
 	for i, record := range records[1:] {
 		if len(record) < 13 {
 			log.Printf("Skipping record %d: insufficient columns (%d)", i+1, len(record))
 			errorCount++
 			continue
 		}
-		
-		var card Card
-		card.Count, _ = strconv.Atoi(record[0])
-		card.TradelistCount, _ = strconv.Atoi(record[1])
-		card.Name = record[2]
-		card.Edition = record[3]
-		card.Condition = record[4]
-		card.Language = record[5]
-		card.Foil = record[6] == "foil"
-		card.Tags = record[7]
-		card.CollectorNumber = record[9]
-		card.Alter = record[10] == "Yes"
-		card.Proxy = record[11] == "Yes"
-		card.PurchasePrice, _ = strconv.ParseFloat(record[12], 64)
 
-		// check if card exists in cards table
-		var cardID int
-		err := db.QueryRow(`
-			SELECT id FROM cards 
-			WHERE name = $1 AND edition = $2 AND foil = $3
-		`, card.Name, card.Edition, card.Foil).Scan(&cardID)
+		card := parseCardRecord(record)
 
+		// 1. Ensure the card template exists in the master list
+		cardID, err := upsertCardTemplate(card)
 		if err != nil {
-			if err == sql.ErrNoRows {
-				// create card if it doesn't exist
-				err = db.QueryRow(`
-					INSERT INTO cards (name, edition, condition, language, foil, tags, collector_number, alter, proxy)
-					VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-					RETURNING id
-				`, card.Name, card.Edition, card.Condition, card.Language, card.Foil, card.Tags, card.CollectorNumber, card.Alter, card.Proxy).Scan(&cardID)
-
-				if err != nil {
-					log.Printf("Error creating card '%s' (%s, foil=%v): %v", card.Name, card.Edition, card.Foil, err)
-					errorCount++
-					continue
-				}
-				log.Printf("Created new card: %s (id=%d)", card.Name, cardID)
-			} else {
-				log.Printf("Error checking if card exists '%s': %v", card.Name, err)
-				errorCount++
-				continue
-			}
-		}
-
-		// Check if user already has this card
-		var userCardExists bool
-		err = db.QueryRow(`
-			SELECT EXISTS(
-				SELECT 1 FROM user_cards 
-				WHERE user_id = $1 AND card_id = $2
-			)
-		`, userID, cardID).Scan(&userCardExists)
-
-		if err != nil {
-			log.Printf("Error checking if user has card (user_id=%d, card_id=%d): %v", userID, cardID, err)
+			log.Printf("Error with card template '%s': %v", card.Name, err)
 			errorCount++
 			continue
 		}
 
-
-		if userCardExists {
-			// update existing user_card entry
-			_, err = db.Exec(`
-				UPDATE user_cards 
-				SET count = $1, tradelist_count = $2, purchase_price = $3, updated_at = CURRENT_TIMESTAMP
-				WHERE user_id = $4 AND card_id = $5
-			`, card.Count, card.TradelistCount, card.PurchasePrice, userID, cardID)
-			if err != nil {
-				log.Printf("Error updating user_card (user_id=%d, card_id=%d): %v", userID, cardID, err)
-				errorCount++
-				continue
-			}
-			successCount++
-		} else {
-			// create new user_card entry
-			_, err = db.Exec(`
-				INSERT INTO user_cards (user_id, card_id, count, tradelist_count, purchase_price)
-				VALUES ($1, $2, $3, $4, $5)
-			`, userID, cardID, card.Count, card.TradelistCount, card.PurchasePrice)
-			if err != nil {
-				log.Printf("Error inserting user_card (user_id=%d, card_id=%d): %v", userID, cardID, err)
-				errorCount++
-				continue
-			}
-			successCount++
+		// 2. Link this specific card instance to the user
+		err = upsertUserOwnership(userID, cardID, card)
+		if err != nil {
+			log.Printf("Error with user ownership (user_id=%d, card_id=%d): %v", userID, cardID, err)
+			errorCount++
+			continue
 		}
+
+		successCount++
 	}
 
 	log.Printf("Upload complete: %d successful, %d errors", successCount, errorCount)
-	
 	if errorCount > 0 && successCount == 0 {
 		return fmt.Errorf("all %d records failed to upload", errorCount)
 	}
-	
 	return nil
+}
+
+func parseCardRecord(record []string) Card {
+	count, _ := strconv.Atoi(record[0])
+	tradelistCount, _ := strconv.Atoi(record[1])
+	foil := record[6] == "foil"
+	alter := record[10] == "Yes"
+	proxy := record[11] == "Yes"
+	price, _ := strconv.ParseFloat(record[12], 64)
+
+	return Card{
+		Count:           count,
+		TradelistCount:  tradelistCount,
+		Name:            record[2],
+		Edition:         record[3],
+		Condition:       record[4],
+		Language:        record[5],
+		Foil:            foil,
+		Tags:            record[7],
+		CollectorNumber: record[9],
+		Alter:           alter,
+		Proxy:           proxy,
+		PurchasePrice:   price,
+	}
+}
+
+func upsertCardTemplate(card Card) (int, error) {
+	var cardID int
+	err := db.QueryRow(`
+		INSERT INTO cards (name, edition, collector_number, foil)
+		VALUES ($1, $2, $3, $4)
+		ON CONFLICT (name, edition, collector_number, foil) 
+		DO UPDATE SET name = EXCLUDED.name
+		RETURNING id
+	`, card.Name, card.Edition, card.CollectorNumber, card.Foil).Scan(&cardID)
+	return cardID, err
+}
+
+func upsertUserOwnership(userID int, cardID int, card Card) error {
+	_, err := db.Exec(`
+		INSERT INTO user_cards (
+			user_id, card_id, count, tradelist_count, purchase_price, 
+			condition, language, "alter", proxy, tags
+		)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+		ON CONFLICT (user_id, card_id, condition, language, "alter", proxy) 
+		DO UPDATE SET 
+			count = EXCLUDED.count,
+			tradelist_count = EXCLUDED.tradelist_count,
+			purchase_price = EXCLUDED.purchase_price,
+			tags = EXCLUDED.tags,
+			updated_at = CURRENT_TIMESTAMP
+	`, userID, cardID, card.Count, card.TradelistCount, card.PurchasePrice,
+		card.Condition, card.Language, card.Alter, card.Proxy, card.Tags)
+	return err
 }
