@@ -17,7 +17,7 @@ import (
 )
 
 type CardView struct {
-	Name      string `json:"name"`
+	Name      string   `json:"name"`
 	Synergy   *float64 `json:"synergy,omitempty"`
 	Inclusion *int     `json:"inclusion,omitempty"`
 }
@@ -55,7 +55,7 @@ type CardCategory struct {
 type CardListResponse []CardCategory
 
 type Precon struct {
-	Precon    string `json:"precon"`
+	Precon string `json:"precon"`
 }
 
 func GetCardUpgrades(c *gin.Context) {
