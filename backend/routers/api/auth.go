@@ -23,6 +23,12 @@ func Login(c *gin.Context) {
 		return
 	}
 
+	// add email validation to prevent sql injection
+	if !utils.ValidateEmail(loginReq.Email) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid email"})
+		return
+	}
+
 	var user models.User
 	user, err := models.GetUser(loginReq.Email)
 
@@ -57,12 +63,12 @@ func Login(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"message": "Login successful",
-		"access_token": accessToken,
+		"message":       "Login successful",
+		"access_token":  accessToken,
 		"refresh_token": refreshToken,
 		"user": gin.H{
-			"id": user.ID,
-			"email": user.Email,
+			"id":       user.ID,
+			"email":    user.Email,
 			"username": user.Username,
 		},
 	})
@@ -72,6 +78,21 @@ func Signup(c *gin.Context) {
 	var user models.User
 	if err := c.ShouldBindJSON(&user); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		return
+	}
+
+	if !utils.ValidateEmail(user.Email) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid email"})
+		return
+	}
+
+	if user.Password == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Password is required"})
+		return
+	}
+
+	if user.Username == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Username is required"})
 		return
 	}
 
