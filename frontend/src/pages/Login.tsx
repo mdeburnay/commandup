@@ -22,14 +22,7 @@ export const Login = () => {
 	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
 		try {
-			const userData = await login({ email, password }).unwrap();
-			dispatch(
-				setCredentials({
-					user: userData.user,
-					accessToken: userData.access_token,
-					refreshToken: userData.refresh_token,
-				})
-			);
+			await login({ email, password }).unwrap();
 			setError("");
 			navigate("/");
 		} catch (err: any) {

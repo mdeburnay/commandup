@@ -17,7 +17,7 @@ export const Signup = () => {
 		try {
 			await signup({ email, password, username }).unwrap();
 			setError("");
-			navigate("/login");
+			navigate("/");
 		} catch (err: any) {
 			setError(err?.data?.message || err.error || "Signup failed");
 		}

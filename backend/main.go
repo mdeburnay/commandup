@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 
+	"commandup/config"
 	"commandup/models"
 	"commandup/routers"
 	"net/http"
@@ -10,6 +11,7 @@ import (
 
 func init() {
 	models.Init()
+	config.Init()
 }
 
 func main() {

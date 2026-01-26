@@ -14,22 +14,15 @@ export function FileUpload(): JSX.Element {
 			const formData = new FormData();
 			formData.append("file", file);
 
-			// Get token from localStorage
-			const accessToken = localStorage.getItem("accessToken");
-
-			const headers: Record<string, string> = {
-				"Content-Type": "multipart/form-data",
-			};
-
-			// Add Authorization header if token exists
-			if (accessToken) {
-				headers["Authorization"] = `Bearer ${accessToken}`;
-			}
-
 			return axios.post(
 				"http://localhost:8080/api/cards/upload-card-collection",
 				formData,
-				{ headers }
+				{
+					headers: {
+						"Content-Type": "multipart/form-data",
+					},
+					withCredentials: true,
+				}
 			);
 		},
 	});

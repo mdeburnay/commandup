@@ -11,22 +11,30 @@ import (
 
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		authHeader := c.GetHeader("Authorization")
-		if authHeader == "" {
+		var tokenString string
+
+		// Try to get token from cookie first (preferred for httpOnly cookies)
+		if cookieToken, err := c.Cookie("access_token"); err == nil && cookieToken != "" {
+			tokenString = cookieToken
+		} else {
+			// Fallback to Authorization header for backward compatibility
+			authHeader := c.GetHeader("Authorization")
+			if authHeader != "" {
+				parts := strings.Split(authHeader, " ")
+				if len(parts) == 2 && parts[0] == "Bearer" {
+					tokenString = parts[1]
+				}
+			}
+		}
+
+		// If no token found, set unauthenticated and continue
+		if tokenString == "" {
 			c.Set("authenticated", false)
 			c.Next()
 			return
 		}
 
-		// Extract token from "Bearer <token>"
-		parts := strings.Split(authHeader, " ")
-		if len(parts) != 2 || parts[0] != "Bearer" {
-			c.Set("authenticated", false)
-			c.Next()
-			return
-		}
-
-		tokenString := parts[1]
+		// Validate token
 		claims, err := utils.ValidateToken(tokenString)
 		if err != nil {
 			c.Set("authenticated", false)
